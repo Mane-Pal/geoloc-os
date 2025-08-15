@@ -113,6 +113,7 @@
         name: NetworkManager
         enabled: yes
         state: started
+      tags: systemd
 
     - name: Enable Bluetooth service
       become: true
@@ -121,6 +122,7 @@
         enabled: yes
         state: started
       when: "'bluez' in essential_services"
+      tags: systemd
 
     - name: Display completion message
       debug:

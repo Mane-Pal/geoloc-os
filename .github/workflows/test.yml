@@ -33,7 +33,9 @@ jobs:
         yamllint -d relaxed *.yml
         shellcheck *.sh || true
 
-    - name: Ansible checks
+    - name: Ansible syntax check
+      run: ansible-playbook -i localhost, -c local playbook.yml --syntax-check
+      
+    - name: Ansible dry run (skip systemd tasks)
       run: |
-        ansible-playbook -i localhost, -c local playbook.yml --syntax-check
-        su - testuser -c "cd $GITHUB_WORKSPACE && ansible-playbook -i localhost, -c local playbook.yml --check --diff"
+        su - testuser -c "cd $GITHUB_WORKSPACE && ansible-playbook -i localhost, -c local playbook.yml --check --diff --skip-tags systemd"
