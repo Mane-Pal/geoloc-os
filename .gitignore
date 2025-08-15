@@ -1,0 +1,23 @@
+# Ansible
+*.retry
+ansible.log
+
+# Backups
+*.backup
+*.bak
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test artifacts
+test-results/
+.coverage
+*.log
