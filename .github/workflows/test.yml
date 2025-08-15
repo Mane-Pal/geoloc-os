@@ -35,5 +35,5 @@ jobs:
 
     - name: Ansible checks
       run: |
-        ansible-playbook playbook.yml --syntax-check
+        ansible-playbook -i localhost, -c local playbook.yml --syntax-check
         su - testuser -c "cd $GITHUB_WORKSPACE && ansible-playbook -i localhost, -c local playbook.yml --check --diff"
