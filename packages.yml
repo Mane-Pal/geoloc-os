@@ -1,0 +1,76 @@
+---
+core_packages:
+  - base-devel
+  - git
+
+terminal_packages:
+  - zsh
+  - tmux
+  - foot
+
+cli_tools:
+  - bat
+  - eza
+  - fzf
+  - ripgrep
+  - fd
+  - zoxide
+  - wget
+  - jq
+  - htop
+  - btop
+  - fastfetch
+  - man-db
+  - man-pages
+
+editor_packages:
+  - neovim
+  - python-pynvim
+
+hyprland_packages:
+  - hyprland
+  - hyprlock
+  - hypridle
+  - hyprpicker
+  - waybar
+  - mako
+  - swaybg
+  - wl-clipboard
+  - grim
+  - slurp
+  - xdg-desktop-portal-hyprland
+  - xdg-desktop-portal-gtk
+  - polkit-gnome
+  - qt5-wayland
+  - qt6-wayland
+
+system_utilities:
+  - brightnessctl
+  - pamixer
+  - playerctl
+  - udiskie
+  - rsync
+
+essential_services:
+  - pipewire
+  - pipewire-pulse
+  - pipewire-alsa
+  - pipewire-jack
+  - wireplumber
+  - networkmanager
+  - bluez
+  - bluez-utils
+
+aur_packages:
+  - zim-git
+  - walker-bin
+  - zen-browser-bin
+  - brave-bin
+  - cursor-bin
+
+font_packages:
+  - ttf-font-awesome
+  - noto-fonts
+  - noto-fonts-emoji
+  - ttf-jetbrains-mono
+  - ttf-fira-code

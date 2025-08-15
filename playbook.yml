@@ -1,0 +1,135 @@
+---
+- name: Setup Geoloc OS
+  hosts: localhost
+  become: false
+  vars_files:
+    - packages.yml
+
+  tasks:
+    - name: Update pacman database
+      become: true
+      pacman:
+        update_cache: yes
+
+    - name: Install core system packages
+      become: true
+      pacman:
+        name: "{{ core_packages }}"
+        state: present
+
+    - name: Install terminal and shell packages
+      become: true
+      pacman:
+        name: "{{ terminal_packages }}"
+        state: present
+
+    - name: Install CLI tools
+      become: true
+      pacman:
+        name: "{{ cli_tools }}"
+        state: present
+
+    - name: Install Hyprland desktop packages
+      become: true
+      pacman:
+        name: "{{ hyprland_packages }}"
+        state: present
+
+    - name: Install system utilities
+      become: true
+      pacman:
+        name: "{{ system_utilities }}"
+        state: present
+
+    - name: Install essential services
+      become: true
+      pacman:
+        name: "{{ essential_services }}"
+        state: present
+
+    - name: Install fonts
+      become: true
+      pacman:
+        name: "{{ font_packages }}"
+        state: present
+
+    - name: Check if paru is installed
+      command: which paru
+      register: paru_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install AUR packages
+      command: paru -S --noconfirm --needed {{ item }}
+      loop: "{{ aur_packages }}"
+      when: paru_check.rc == 0
+
+    - name: Create .config directories
+      file:
+        path: "{{ ansible_env.HOME }}/.config/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - hypr
+        - nvim
+        - foot
+        - waybar
+        - mako
+        - tmux
+        - systemd/user
+
+    - name: Copy shell configuration files
+      copy:
+        src: "dotfiles/{{ item }}"
+        dest: "{{ ansible_env.HOME }}/{{ item }}"
+        mode: preserve
+        backup: yes
+      loop:
+        - .zshrc
+        - .zimrc
+        - .gitconfig
+        - .taskrc
+      ignore_errors: yes
+
+    - name: Copy config directories
+      copy:
+        src: "dotfiles/.config/{{ item }}/"
+        dest: "{{ ansible_env.HOME }}/.config/{{ item }}"
+        mode: preserve
+        backup: yes
+      loop:
+        - hypr
+        - nvim
+        - foot
+        - waybar
+        - mako
+        - tmux
+        - systemd/user
+      ignore_errors: yes
+
+    - name: Enable NetworkManager
+      become: true
+      systemd:
+        name: NetworkManager
+        enabled: yes
+        state: started
+
+    - name: Enable Bluetooth service
+      become: true
+      systemd:
+        name: bluetooth
+        enabled: yes
+        state: started
+      when: "'bluez' in essential_services"
+
+    - name: Display completion message
+      debug:
+        msg: |
+          Geoloc OS MVP setup complete!
+
+          Next steps:
+          1. Copy your dotfiles to the geoloc-os/dotfiles directory
+          2. Re-run ./bootstrap.sh to apply your configurations
+          3. Reboot to ensure all services are running properly
+
+          For v2 improvements, see the README.md
