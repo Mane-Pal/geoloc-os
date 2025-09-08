@@ -1,0 +1,45 @@
+#!/bin/bash
+# geoloc-theme-list: List available themes
+# Usage: geoloc-theme-list
+
+set -euo pipefail
+
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Find the dotfiles directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/dotfiles"
+THEMES_DIR="$DOTFILES_DIR/themes"
+
+if [[ ! -d "$THEMES_DIR" ]]; then
+  echo -e "${RED}[ERROR]${NC} Themes directory not found: $THEMES_DIR"
+  exit 1
+fi
+
+echo -e "${BLUE}Available Themes:${NC}"
+echo "=================="
+
+current_theme=$(readlink "$THEMES_DIR/current" 2>/dev/null | sed 's|.*/||' || echo "")
+
+for theme_dir in "$THEMES_DIR"/*; do
+  if [[ -d "$theme_dir" && "$(basename "$theme_dir")" != "current" ]]; then
+    theme_name=$(basename "$theme_dir")
+    if [[ "$theme_name" == "$current_theme" ]]; then
+      echo -e "  ${GREEN}→ $theme_name (current)${NC}"
+    else
+      echo -e "  ${YELLOW}  $theme_name${NC}"
+    fi
+  fi
+done
+
+if [[ -n "$current_theme" ]]; then
+  echo ""
+  echo -e "${BLUE}Current theme:${NC} $current_theme"
+else
+  echo ""
+  echo -e "${YELLOW}No theme currently selected${NC}"
+fi

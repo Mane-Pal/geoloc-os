@@ -1,0 +1,52 @@
+---
+# Services role - System services and configuration
+# This role configures system services and essential system setup
+
+- name: Install services packages
+  become: true
+  pacman:
+    name: "{{ packages }}"
+    state: present
+  tags:
+    - services
+    - packages
+
+- name: Install pipewire-jack (replaces jack2)
+  become: true
+  shell: yes | pacman -S pipewire-jack --noconfirm
+  args:
+    creates: /usr/lib/pipewire-0.3/jack/libjack.so
+  ignore_errors: true
+  tags:
+    - services
+    - audio
+
+- name: Enable NetworkManager
+  become: true
+  systemd:
+    name: NetworkManager
+    enabled: yes
+    state: started
+  tags:
+    - services
+    - network
+
+- name: Enable Bluetooth service
+  become: true
+  systemd:
+    name: bluetooth
+    enabled: yes
+    state: started
+  when: "'bluez' in packages"
+  tags:
+    - services
+    - bluetooth
+
+- name: Create systemd user directory
+  file:
+    path: "{{ ansible_env.HOME }}/.config/systemd/user"
+    state: directory
+    mode: '0755'
+  tags:
+    - services
+    - config

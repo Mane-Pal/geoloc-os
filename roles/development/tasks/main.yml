@@ -1,0 +1,31 @@
+---
+# Development role - Professional development tools
+# This role installs development tools, containers, and programming languages
+
+- name: Install development packages
+  become: true
+  pacman:
+    name: "{{ packages }}"
+    state: present
+  tags:
+    - development
+    - packages
+
+- name: Install AUR packages for development
+  shell: yay -S --needed --noconfirm {{ aur_packages_list | join(' ') }}
+  when: aur_packages_list | length > 0
+  tags:
+    - development
+    - aur
+
+- name: Create development config directories
+  file:
+    path: "{{ ansible_env.HOME }}/.config/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - nvim
+    - tmux
+  tags:
+    - development
+    - config

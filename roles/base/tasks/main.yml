@@ -1,0 +1,29 @@
+---
+# Base role - Essential system setup
+# This role installs core system packages and basic CLI tools
+
+- name: Update pacman database
+  become: true
+  pacman:
+    update_cache: yes
+  tags: 
+    - base
+    - packages
+
+- name: Install base packages
+  become: true
+  pacman:
+    name: "{{ packages }}"
+    state: present
+  tags:
+    - base
+    - packages
+
+- name: Check if paru is installed
+  command: which paru
+  register: paru_check
+  changed_when: false
+  failed_when: false
+  tags:
+    - base
+    - packages

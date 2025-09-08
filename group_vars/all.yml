@@ -1,0 +1,43 @@
+---
+# Global variables shared across all roles
+# Keep this file minimal - role-specific variables should be in roles/*/vars/main.yml
+
+# User settings
+ansible_user: "{{ ansible_env.USER }}"
+home_dir: "{{ ansible_env.HOME }}"
+
+# System configuration
+enable_aur_packages: true
+
+# Theme settings (used by theme management scripts)
+theme_dir: "{{ home_dir }}/.config/themes"
+current_theme_link: "{{ theme_dir }}/current"
+
+# Common directory paths
+config_dir: "{{ home_dir }}/.config"
+local_bin: "{{ home_dir }}/.local/bin"
+
+# Machine type detection (can be overridden per machine)
+machine_type: "workstation"  # workstation, server, laptop
+
+# Global package ignore list - system packages that should never be managed
+system_base_ignore:
+  - base                    # Meta package containing core system
+  - linux                  # Kernel
+  - linux-firmware          # Hardware firmware
+  - grub                    # Bootloader
+  - efibootmgr              # EFI boot management
+  - intel-ucode             # CPU microcode updates
+  - man-db                  # Manual pages system
+  - less                    # Pager (dependency of man-db)
+  - inetutils               # Basic network utilities (ping, etc)
+  - net-tools               # Legacy network tools (ifconfig, netstat)
+  - wireless_tools          # Wireless utilities (iwconfig)
+  - btrfs-progs             # Filesystem tools (if using btrfs)
+  - lvm2                    # Logical volume management
+  - cpupower                # CPU frequency scaling
+  - power-profiles-daemon   # Power management
+  - sof-firmware            # Sound firmware for modern Intel
+  - gst-plugin-pipewire     # Audio plugin integration
+  - libpulse                # PulseAudio compatibility layer
+  - zram-generator          # RAM compression configuration

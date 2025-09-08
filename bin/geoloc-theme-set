@@ -1,0 +1,126 @@
+#!/bin/bash
+# geoloc-theme-set: Switch system theme across all applications
+# Usage: geoloc-theme-set <theme-name>
+
+set -euo pipefail
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+log() {
+  echo -e "${GREEN}[THEME] $*${NC}"
+}
+
+info() {
+  echo -e "${BLUE}[INFO] $*${NC}"
+}
+
+error() {
+  echo -e "${RED}[ERROR] $*${NC}"
+}
+
+warn() {
+  echo -e "${YELLOW}[WARNING] $*${NC}"
+}
+
+# Find the dotfiles directory (assumes it's a sibling to system/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/dotfiles"
+THEMES_DIR="$DOTFILES_DIR/themes"
+
+if [[ ! -d "$THEMES_DIR" ]]; then
+  error "Themes directory not found: $THEMES_DIR"
+  error "Make sure dotfiles are set up with theme system"
+  exit 1
+fi
+
+show_help() {
+  cat << EOF
+Usage: geoloc-theme-set <theme-name>
+
+Switch system theme across all applications
+
+AVAILABLE THEMES:
+$(find "$THEMES_DIR" -maxdepth 1 -type d -not -name themes | sort | sed 's|.*/|  |g')
+
+CURRENT THEME:
+  $(readlink "$THEMES_DIR/current" 2>/dev/null | sed 's|.*/||' || echo "none")
+
+EXAMPLES:
+  geoloc-theme-set gruvbox      # Switch to gruvbox theme
+  geoloc-theme-set catppuccin   # Switch to catppuccin theme
+
+EOF
+}
+
+apply_theme() {
+  local theme_name="$1"
+  local theme_path="$THEMES_DIR/$theme_name"
+  
+  if [[ ! -d "$theme_path" ]]; then
+    error "Theme '$theme_name' not found in $THEMES_DIR"
+    show_help
+    exit 1
+  fi
+  
+  log "Switching to theme: $theme_name"
+  
+  # Update current theme symlink
+  if [[ -L "$THEMES_DIR/current" ]]; then
+    rm "$THEMES_DIR/current"
+  fi
+  
+  ln -sf "$theme_name" "$THEMES_DIR/current"
+  info "Updated theme symlink: $THEMES_DIR/current -> $theme_name"
+  
+  # Reload applications that support theme switching
+  reload_applications
+  
+  log "Theme switched to $theme_name successfully!"
+}
+
+reload_applications() {
+  info "Reloading applications..."
+  
+  # Reload foot terminal (if running)
+  if pgrep -x foot >/dev/null; then
+    info "Reloading foot terminal..."
+    # Touch config file to trigger reload
+    touch "$HOME/.config/foot/foot.ini" 2>/dev/null || true
+  fi
+  
+  # Reload mako notifications
+  if pgrep -x mako >/dev/null; then
+    info "Reloading mako notifications..."
+    makoctl reload 2>/dev/null || warn "Could not reload mako"
+  fi
+  
+  # Reload waybar
+  if pgrep -x waybar >/dev/null; then
+    info "Restarting waybar..."
+    pkill waybar 2>/dev/null || true
+    waybar &>/dev/null & disown || warn "Could not restart waybar"
+  fi
+  
+  # Reload hyprland config
+  if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+    info "Reloading Hyprland config..."
+    hyprctl reload 2>/dev/null || warn "Could not reload Hyprland"
+  fi
+}
+
+main() {
+  if [[ $# -eq 0 ]] || [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    show_help
+    exit 0
+  fi
+  
+  local theme_name="$1"
+  apply_theme "$theme_name"
+}
+
+main "$@"

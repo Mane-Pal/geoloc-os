@@ -1,0 +1,72 @@
+---
+# Development role packages - Professional development tools
+
+dev_tools:
+  - aws-cli-v2
+  - github-cli
+  - just
+  - tree
+  - tldr
+  - whois
+  - yq
+  - lsof
+  - lazygit
+
+container_tools:
+  - docker
+  - docker-compose
+  - podman
+  - lazydocker
+
+kubernetes_tools:
+  - kubectl
+  - helm
+  - k9s
+  - kubectx
+  - kustomize
+  - stern
+
+infrastructure_tools:
+  - terraform
+  - terraform-docs
+  - tflint
+
+python_dev:
+  - pyenv
+  - pyenv-virtualenv
+  - python-build
+  - python-virtualenv
+  - python-pipx
+  - pyright
+  - python-lsp-server
+  - ruff
+  - python-flake8
+  - python-isort
+  - python-typer
+
+system_dev:
+  - clang
+  - llvm
+  - luarocks
+  - tree-sitter-cli
+  - npm
+
+ai_tools:
+  - claude-code
+
+database_tools:
+  - dbeaver
+  - postgresql-libs
+
+# AUR packages for development
+aur_packages:
+  - hadolint-bin
+  - tfupdate-bin
+  - opencode-bin
+  - cursor-bin
+
+# All packages for this role
+packages: "{{ dev_tools + container_tools + kubernetes_tools + infrastructure_tools + python_dev + system_dev + ai_tools + database_tools }}"
+
+# AUR packages handled separately
+aur_packages_list: "{{ aur_packages }}"

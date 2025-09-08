@@ -1,0 +1,12 @@
+---
+# Optional role - Nice-to-have packages and applications
+# This role installs optional packages that can be skipped for minimal setups
+
+- name: Install optional packages
+  become: true
+  pacman:
+    name: "{{ packages }}"
+    state: present
+  tags:
+    - optional
+    - packages

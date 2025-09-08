@@ -1,0 +1,34 @@
+---
+# Desktop role - Hyprland desktop environment
+# This role installs and configures the desktop environment
+
+- name: Install desktop packages
+  become: true
+  pacman:
+    name: "{{ packages }}"
+    state: present
+  tags:
+    - desktop
+    - packages
+
+- name: Install AUR packages for desktop
+  shell: yay -S --needed --noconfirm {{ aur_packages_list | join(' ') }}
+  when: aur_packages_list | length > 0
+  tags:
+    - desktop
+    - aur
+
+- name: Create .config directories for desktop
+  file:
+    path: "{{ ansible_env.HOME }}/.config/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - hypr
+    - waybar
+    - mako
+    - foot
+  tags:
+    - desktop
+    - config
+

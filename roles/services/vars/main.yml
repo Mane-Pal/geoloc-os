@@ -1,0 +1,39 @@
+---
+# Services role packages - System services and utilities
+
+essential_services:
+  - pipewire
+  - pipewire-pulse
+  - pipewire-alsa
+  - wireplumber
+  - networkmanager
+  - bluez
+  - bluez-utils
+
+system_utilities:
+  - brightnessctl
+  - pamixer
+  - playerctl
+  - udiskie
+  - rsync
+  - thunar
+  - git-delta
+
+audio_tools:
+  - pavucontrol
+
+network_tools:
+  - network-manager-applet
+  - nm-connection-editor
+  - networkmanager-fortisslvpn
+  - networkmanager-openvpn
+  - networkmanager-vpnc
+  - openfortigui
+  - openfortivpn
+
+# Conflicting packages handled separately
+conflicting_packages:
+  - pipewire-jack
+
+# All packages for this role
+packages: "{{ essential_services + system_utilities + audio_tools + network_tools }}"

@@ -1,0 +1,37 @@
+---
+# Base role packages - Essential system foundation
+
+core_packages:
+  - base-devel
+  - git
+
+terminal_packages:
+  - zsh
+  - tmux
+  - foot
+
+cli_tools:
+  - bat
+  - eza
+  - fzf
+  - ripgrep
+  - fd
+  - zoxide
+  - wget
+  - jq
+  - btop
+  - fastfetch
+  - gum
+  - curlie
+  - httpie
+  - atuin
+
+editor_packages:
+  - neovim
+  - python-pynvim
+
+package_management:
+  - yay-bin
+
+# All packages for this role
+packages: "{{ core_packages + terminal_packages + cli_tools + editor_packages + package_management }}"
