@@ -1,2 +1,4 @@
 tests/container-artifacts-*
 *.qcow2
+tests/arch-cloudimg.qcow2
+
