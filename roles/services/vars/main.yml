@@ -31,9 +31,14 @@ network_tools:
   - openfortigui
   - openfortivpn
 
+network_stability_tools:
+  - wireless-regdb      # Regulatory database for proper WiFi channels
+  - crda                # Central Regulatory Domain Agent
+  - iw                  # Modern wireless configuration tool
+
 # Conflicting packages handled separately
 conflicting_packages:
   - pipewire-jack
 
 # All packages for this role
-packages: "{{ essential_services + system_utilities + audio_tools + network_tools }}"
+packages: "{{ essential_services + system_utilities + audio_tools + network_tools + network_stability_tools }}"

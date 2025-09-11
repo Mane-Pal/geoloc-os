@@ -1,0 +1,31 @@
+---
+# Handlers for services role
+# These are triggered by notify directives in tasks
+
+- name: rebuild initramfs
+  become: true
+  shell: |
+    # Rebuild initramfs to include new modprobe configuration
+    mkinitcpio -P
+  tags:
+    - services
+    - network
+
+- name: restart NetworkManager
+  become: true
+  systemd:
+    name: NetworkManager
+    state: restarted
+  tags:
+    - services
+    - network
+
+- name: reload udev rules
+  become: true
+  shell: |
+    # Reload udev rules and trigger for existing devices
+    udevadm control --reload-rules
+    udevadm trigger --subsystem-match=net
+  tags:
+    - services
+    - network

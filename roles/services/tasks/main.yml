@@ -50,3 +50,72 @@
   tags:
     - services
     - config
+
+# WiFi Stability Optimizations
+- name: Configure iwlwifi driver optimizations for Intel WiFi stability
+  become: true
+  copy:
+    content: |
+      # iwlwifi optimizations for Intel AX211 and similar chips
+      # Prevents WiFi drops and connection instability
+      options iwlwifi swcrypto=0 11n_disable=0 power_save=0 uapsd_disable=1 amsdu_size=3
+      options iwlmvm power_scheme=1
+    dest: /etc/modprobe.d/iwlwifi.conf
+    mode: '0644'
+    backup: yes
+  notify: rebuild initramfs
+  tags:
+    - services
+    - network
+    - wifi
+
+- name: Create NetworkManager conf.d directory
+  become: true
+  file:
+    path: /etc/NetworkManager/conf.d
+    state: directory
+    mode: '0755'
+  tags:
+    - services
+    - network
+
+- name: Configure NetworkManager WiFi stability settings
+  become: true
+  copy:
+    content: |
+      # WiFi stability optimizations for NetworkManager
+      # Prevents authentication issues and connection drops
+      [device]
+      wifi.scan-rand-mac-address=no
+      wifi.backend=wpa_supplicant
+
+      [connection]
+      wifi.cloned-mac-address=preserve
+      ipv6.method=auto
+      autoconnect-retries=0
+
+      [main]
+      rc-manager=file
+    dest: /etc/NetworkManager/conf.d/wifi-stability.conf
+    mode: '0644'
+    backup: yes
+  notify: restart NetworkManager
+  tags:
+    - services
+    - network
+    - wifi
+
+- name: Add udev rule to disable WiFi power saving
+  become: true
+  copy:
+    content: |
+      # Disable WiFi power management to prevent connection drops
+      # Applies to all wireless network interfaces
+      ACTION=="add", SUBSYSTEM=="net", KERNEL=="wlan*", RUN+="/usr/bin/iw dev %k set power_save off"
+    dest: /etc/udev/rules.d/70-wifi-powersave.rules
+    mode: '0644'
+  notify: reload udev rules
+  tags:
+    - services
+    - network
+    - wifi
