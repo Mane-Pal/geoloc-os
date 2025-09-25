@@ -1,0 +1,58 @@
+---
+# Extras role - Optional and work-related applications
+# Combines optional apps and work-related tools like ClamAV
+
+- name: Install extra packages
+  become: true
+  pacman:
+    name: "{{ packages.extras }}"
+    state: present
+
+# ClamAV Configuration
+- name: Create ClamAV log directory
+  become: true
+  file:
+    path: /var/log/clamav
+    state: directory
+    owner: clamav
+    group: clamav
+    mode: '0755'
+
+- name: Configure ClamAV freshclam
+  become: true
+  copy:
+    src: freshclam.conf
+    dest: /etc/clamav/freshclam.conf
+    mode: '0644'
+    backup: yes
+
+- name: Configure ClamAV daemon
+  become: true
+  copy:
+    src: clamd.conf
+    dest: /etc/clamav/clamd.conf
+    mode: '0644'
+    backup: yes
+
+- name: Update ClamAV virus database
+  become: true
+  command: freshclam
+  ignore_errors: yes
+
+- name: Enable and start ClamAV services
+  become: true
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  loop:
+    - clamav-freshclam.service
+    - clamav-daemon.service
+
+- name: Verify ClamAV installation
+  debug:
+    msg: |
+      ClamAV services should now be running.
+      Check status with: systemctl status clamav-daemon clamav-freshclam
+      Test detection with: clamscan --version

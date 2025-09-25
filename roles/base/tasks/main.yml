@@ -6,24 +6,133 @@
   become: true
   pacman:
     update_cache: yes
-  tags: 
-    - base
-    - packages
+
+# Performance optimizations
+- name: Configure pacman with optimizations
+  become: true
+  copy:
+    src: pacman.conf
+    dest: /etc/pacman.conf
+    mode: '0644'
+    backup: yes
+  notify: refresh pacman cache
 
 - name: Install base packages
   become: true
   pacman:
-    name: "{{ packages }}"
+    name: "{{ packages.base }}"
     state: present
-  tags:
-    - base
-    - packages
 
-- name: Check if paru is installed
-  command: which paru
+- name: Create user local directories
+  file:
+    path: "{{ ansible_env.HOME }}/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - .local/bin
+    - .local/share
+    - .config
+
+- name: Set zsh as default shell
+  become: true
+  user:
+    name: "{{ ansible_env.USER }}"
+    shell: /bin/zsh
+
+- name: Disable systemd-networkd-wait-online (using NetworkManager instead)
+  become: true
+  systemd:
+    name: systemd-networkd-wait-online.service
+    enabled: no
+    masked: yes
+
+# System stability optimizations
+- name: Disable USB autosuspend to prevent peripheral disconnection issues
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/disable-usb-autosuspend.conf
+    line: 'options usbcore autosuspend=-1'
+    create: yes
+    mode: '0644'
+    backup: yes
+  notify: rebuild initramfs
+
+- name: Configure power button to ignore instead of shutdown
+  become: true
+  lineinfile:
+    path: /etc/systemd/logind.conf
+    regexp: '^#?HandlePowerKey='
+    line: 'HandlePowerKey=ignore'
+    backup: yes
+  notify: restart systemd-logind
+
+- name: Fix SSH connection flakiness with MTU probing
+  become: true
+  sysctl:
+    name: net.ipv4.tcp_mtu_probing
+    value: '1'
+    sysctl_file: /etc/sysctl.d/99-ssh-fixes.conf
+    reload: yes
+
+# Quality of life improvements
+- name: Configure sudo password attempts
+  become: true
+  copy:
+    src: sudoers-passwd-tries
+    dest: /etc/sudoers.d/passwd-tries
+    mode: '0440'
+    validate: 'visudo -cf %s'
+    backup: yes
+
+- name: Configure PAM faillock
+  become: true
+  copy:
+    src: faillock.conf
+    dest: /etc/security/faillock.conf
+    mode: '0644'
+    backup: yes
+
+- name: Create GPG config directory
+  become: true
+  file:
+    path: /etc/gnupg
+    state: directory
+    mode: '0755'
+
+- name: Configure GPG keyservers
+  become: true
+  copy:
+    src: dirmngr.conf
+    dest: /etc/gnupg/dirmngr.conf
+    mode: '0644'
+    backup: yes
+
+# AUR helper setup
+- name: Verify paru is installed and functional
+  command: paru --version
+  become: false
   register: paru_check
-  changed_when: false
   failed_when: false
-  tags:
-    - base
-    - packages
+  changed_when: false
+
+
+# AUR builder user setup (per kewlfft.aur official docs)
+- name: Create the aur_builder user
+  user:
+    name: aur_builder
+    create_home: yes
+    group: wheel
+  become: true
+  when: paru_check.rc == 0
+
+- name: Allow aur_builder to run sudo pacman without password
+  lineinfile:
+    path: /etc/sudoers.d/11-install-aur_builder
+    line: 'aur_builder ALL=(ALL) NOPASSWD: /usr/bin/pacman'
+    create: yes
+    mode: '0644'
+    validate: 'visudo -cf %s'
+  become: true
+  when: paru_check.rc == 0
+
+

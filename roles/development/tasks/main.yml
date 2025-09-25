@@ -5,27 +5,90 @@
 - name: Install development packages
   become: true
   pacman:
-    name: "{{ packages }}"
+    name: "{{ packages.dev }}"
     state: present
-  tags:
-    - development
-    - packages
 
-- name: Install AUR packages for development
-  shell: yay -S --needed --noconfirm {{ aur_packages_list | join(' ') }}
-  when: aur_packages_list | length > 0
-  tags:
-    - development
-    - aur
+- name: Install development AUR packages
+  kewlfft.aur.aur:
+    name: "{{ item }}"
+    use: paru
+    state: present
+    extra_args: --noconfirm --needed
+  become: yes
+  become_user: aur_builder
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  loop: "{{ aur_packages.dev }}"
+  ignore_errors: yes
+  register: aur_results
+  when: aur_packages.dev | length > 0
 
-- name: Create development config directories
+- name: Add user to docker group
+  become: true
+  user:
+    name: "{{ ansible_env.USER }}"
+    groups: docker
+    append: yes
+  when: "'docker' in packages.dev"
+
+- name: Create Docker config directory
+  become: true
   file:
-    path: "{{ ansible_env.HOME }}/.config/{{ item }}"
+    path: /etc/docker
     state: directory
     mode: '0755'
-  loop:
-    - nvim
-    - tmux
-  tags:
-    - development
-    - config
+  when: "'docker' in packages.dev"
+
+- name: Configure Docker daemon
+  become: true
+  copy:
+    src: docker-daemon.json
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+    backup: yes
+  when: "'docker' in packages.dev"
+  notify: restart docker
+
+- name: Create systemd-resolved config directory
+  become: true
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+  when: "'docker' in packages.dev"
+
+- name: Expose systemd-resolved to Docker network
+  become: true
+  copy:
+    src: docker-resolved.conf
+    dest: /etc/systemd/resolved.conf.d/20-docker-dns.conf
+    mode: '0644'
+    backup: yes
+  when: "'docker' in packages.dev"
+  notify: restart systemd-resolved
+
+- name: Create Docker systemd override directory
+  become: true
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    mode: '0755'
+  when: "'docker' in packages.dev"
+
+- name: Prevent Docker from blocking boot
+  become: true
+  copy:
+    src: docker-no-block-boot.conf
+    dest: /etc/systemd/system/docker.service.d/no-block-boot.conf
+    mode: '0644'
+    backup: yes
+  when: "'docker' in packages.dev"
+  notify: systemd daemon-reload
+
+- name: Enable Docker service
+  become: true
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+  when: "'docker' in packages.dev"

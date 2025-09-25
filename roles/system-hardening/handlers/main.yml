@@ -1,0 +1,7 @@
+---
+# System Hardening role handlers
+
+- name: reload ufw
+  become: true
+  community.general.ufw:
+    state: reloaded

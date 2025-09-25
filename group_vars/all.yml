@@ -1,43 +1,202 @@
 ---
-# Global variables shared across all roles
-# Keep this file minimal - role-specific variables should be in roles/*/vars/main.yml
+# Simplified Geoloc OS Configuration
+# All packages and settings in one place
 
 # User settings
-ansible_user: "{{ ansible_env.USER }}"
 home_dir: "{{ ansible_env.HOME }}"
-
-# System configuration
-enable_aur_packages: true
-
-# Theme settings (used by theme management scripts)
-theme_dir: "{{ home_dir }}/.config/themes"
-current_theme_link: "{{ theme_dir }}/current"
-
-# Common directory paths
 config_dir: "{{ home_dir }}/.config"
 local_bin: "{{ home_dir }}/.local/bin"
 
-# Machine type detection (can be overridden per machine)
-machine_type: "workstation"  # workstation, server, laptop
+# Consolidated package lists
+packages:
+  # Essential system packages
+  base:
+    - base-devel
+    - git
+    - zsh
+    - tmux
+    - foot
+    - neovim
+    - python-pynvim
+    - bat
+    - eza
+    - fzf
+    - ripgrep
+    - fd
+    - zoxide
+    - wget
+    - jq
+    - btop
+    - fastfetch
+    - gum
+    - curlie
+    - httpie
+    - atuin
+    - paru
 
-# Global package ignore list - system packages that should never be managed
-system_base_ignore:
-  - base                    # Meta package containing core system
-  - linux                  # Kernel
-  - linux-firmware          # Hardware firmware
-  - grub                    # Bootloader
-  - efibootmgr              # EFI boot management
-  - intel-ucode             # CPU microcode updates
-  - man-db                  # Manual pages system
-  - less                    # Pager (dependency of man-db)
-  - inetutils               # Basic network utilities (ping, etc)
-  - net-tools               # Legacy network tools (ifconfig, netstat)
-  - wireless_tools          # Wireless utilities (iwconfig)
-  - btrfs-progs             # Filesystem tools (if using btrfs)
-  - lvm2                    # Logical volume management
-  - cpupower                # CPU frequency scaling
-  - power-profiles-daemon   # Power management
-  - sof-firmware            # Sound firmware for modern Intel
-  - gst-plugin-pipewire     # Audio plugin integration
-  - libpulse                # PulseAudio compatibility layer
-  - zram-generator          # RAM compression configuration
+  # Desktop environment (GUI + services)
+  desktop:
+    # Core services
+    - pipewire
+    - pipewire-pulse
+    - pipewire-alsa
+    - pipewire-jack
+    - wireplumber
+    - networkmanager
+    - bluez
+    - bluez-utils
+    - plymouth
+    - power-profiles-daemon
+    - avahi
+    - nss-mdns
+    # Hyprland desktop
+    - hyprland
+    - hyprlock
+    - hypridle
+    - hyprpicker
+    - waybar
+    - mako
+    - swaybg
+    - wl-clipboard
+    - grim
+    - slurp
+    - xdg-desktop-portal-hyprland
+    - xdg-desktop-portal-gtk
+    - polkit-gnome
+    - qt5-wayland
+    - qt6-wayland
+    - xorg-xwayland
+    - sddm
+    # Utilities
+    - brightnessctl
+    - pamixer
+    - playerctl
+    - udiskie
+    - rsync
+    - thunar
+    - git-delta
+    - pavucontrol
+    - network-manager-applet
+    - nm-connection-editor
+    # Fonts
+    - ttf-font-awesome
+    - noto-fonts
+    - noto-fonts-emoji
+    - ttf-dejavu
+    - ttf-liberation
+    - ttf-firacode-nerd
+    - ttf-jetbrains-mono-nerd
+    # Media
+    - gimp
+    - imagemagick
+    - imv
+    - mpv
+    - evince
+    - mediainfo
+    - firefox
+    # System utilities
+    - plocate
+    - clipse
+    - blueberry
+    - python-pyxdg
+    - libnotify
+    # Network stability
+    - wireless-regdb
+    - crda
+    - iw
+
+  # Development tools
+  dev:
+    # General dev tools
+    - aws-cli-v2
+    - github-cli
+    - just
+    - tree
+    - tldr
+    - whois
+    - yq
+    - lsof
+    - lazygit
+    # Containers
+    - docker
+    - docker-compose
+    - podman
+    - lazydocker
+    # Kubernetes
+    - kubectl
+    - helm
+    - k9s
+    - kubectx
+    - kustomize
+    - stern
+    # Infrastructure
+    - terraform
+    - terraform-docs
+    - tflint
+    # Python
+    - pyenv
+    - pyenv-virtualenv
+    - python-build
+    - python-virtualenv
+    - python-pipx
+    - pyright
+    - python-lsp-server
+    - ruff
+    - python-flake8
+    - python-isort
+    - python-typer
+    # System dev
+    - clang
+    - llvm
+    - luarocks
+    - tree-sitter-cli
+    - npm
+    # AI & Database
+    - claude-code
+    - dbeaver
+    - postgresql-libs
+
+  # Extra applications (optional + work)
+  extras:
+    # Writing
+    - obsidian
+    - xournalpp
+    - libreoffice-fresh
+    # Beats
+    - spotify
+    # Work specific
+    - clamav
+    - clamtk
+    - slack-desktop-wayland
+    - keeper-commander
+    - keeper-password-manager
+    - openfortigui
+    - openfortivpn
+    - networkmanager-fortisslvpn
+    - networkmanager-openvpn
+    - networkmanager-vpnc
+    # Printing
+    - cups
+    - cups-filters
+    - cups-pdf
+    - system-config-printer
+
+# AUR packages (manual installation required)
+aur_packages:
+  desktop:
+    - walker-bin
+    - zen-browser-bin
+    - brave-bin
+    - hyprland-qtutils
+    - hyprpolkitagent
+    - hyprshot
+    - kanshi
+    - wl-clip-persist
+    - wlr-randr
+    - nwg-displays
+  dev:
+    - hadolint-bin
+    - tfupdate-bin
+    - opencode-bin
+    - cursor-bin
+  extras: []

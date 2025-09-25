@@ -1,0 +1,26 @@
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Log files
+*.log
+
+# Ansible retry files
+*.retry
+
+# Editor temporary files
+.*.swp
+.*.swo
+
+# macOS
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

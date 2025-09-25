@@ -1,0 +1,21 @@
+---
+# Handlers for work-related-apps role
+
+- name: restart clamav
+  become: true
+  systemd:
+    name: clamav-daemon.service
+    state: restarted
+    daemon_reload: yes
+
+- name: restart freshclam
+  become: true
+  systemd:
+    name: clamav-freshclam.service
+    state: restarted
+    daemon_reload: yes
+
+- name: update clamav database
+  become: true
+  command: freshclam
+  ignore_errors: yes

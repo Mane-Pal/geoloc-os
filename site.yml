@@ -8,64 +8,24 @@
   connection: local
   gather_facts: true
 
-  vars:
-    # Default role configuration - can be overridden
-    enable_base: true
-    enable_services: true  
-    enable_desktop: true
-    enable_development: true
-    enable_optional: true
-
   pre_tasks:
     - name: Display setup information
       debug:
-        msg: |
-          Starting Geoloc OS setup with the following configuration:
-          - Base system: {{ 'enabled' if enable_base else 'disabled' }}
-          - Services: {{ 'enabled' if enable_services else 'disabled' }}
-          - Desktop: {{ 'enabled' if enable_desktop else 'disabled' }}
-          - Development: {{ 'enabled' if enable_development else 'disabled' }}
-          - Optional: {{ 'enabled' if enable_optional else 'disabled' }}
+        msg: "Starting Geoloc OS setup: Base + Desktop + Development + Extras"
 
   roles:
-    - role: base
-      when: enable_base | default(true)
-      tags: 
-        - base
-        - always
-
-    - role: services  
-      when: enable_services | default(true)
-      tags:
-        - services
-
-    - role: desktop
-      when: enable_desktop | default(true) 
-      tags:
-        - desktop
-
-    - role: development
-      when: enable_development | default(true)
-      tags: 
-        - development
-
-    - role: optional
-      when: enable_optional | default(true)
-      tags:
-        - optional
+    - base
+    - desktop
+    - development
+    - extras
+    - system-hardening
 
   post_tasks:
     - name: Display completion message
       debug:
         msg: |
           Geoloc OS setup complete!
-          
-          Roles executed:
-          {{ ansible_run_tags | default('all roles') }}
-          
+
           Next steps:
-          1. Reboot to ensure all services are running properly
-          2. Set up dotfiles with: cd ../dotfiles && ./install.sh
-          3. Configure themes with: ./bin/geoloc-theme-set <theme>
-          
-          For testing: ./tests/test-system.sh validate
+          1. Reboot to ensure all services are running
+          2. Set up your personal dotfiles repository

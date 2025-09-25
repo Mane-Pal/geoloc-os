@@ -1,34 +1,223 @@
 ---
-# Desktop role - Hyprland desktop environment
-# This role installs and configures the desktop environment
+# Desktop role - Desktop environment and system services
+# Combines desktop and services functionality
 
 - name: Install desktop packages
   become: true
   pacman:
-    name: "{{ packages }}"
+    name: "{{ packages.desktop }}"
     state: present
-  tags:
-    - desktop
-    - packages
 
-- name: Install AUR packages for desktop
-  shell: yay -S --needed --noconfirm {{ aur_packages_list | join(' ') }}
-  when: aur_packages_list | length > 0
-  tags:
-    - desktop
-    - aur
+- name: Install pipewire-jack (replaces jack2)
+  become: true
+  shell: yes | pacman -S pipewire-jack --noconfirm
+  args:
+    creates: /usr/lib/pipewire-0.3/jack/libjack.so
+  ignore_errors: true
 
-- name: Create .config directories for desktop
+- name: Enable NetworkManager
+  become: true
+  systemd:
+    name: NetworkManager
+    enabled: yes
+    state: started
+
+- name: Enable Bluetooth service
+  become: true
+  systemd:
+    name: bluetooth
+    enabled: yes
+    state: started
+
+- name: Enable SDDM display manager
+  become: true
+  systemd:
+    name: sddm
+    enabled: yes
+
+- name: Enable power-profiles-daemon
+  become: true
+  systemd:
+    name: power-profiles-daemon
+    enabled: yes
+    state: started
+
+- name: Enable Avahi daemon
+  become: true
+  systemd:
+    name: avahi-daemon
+    enabled: yes
+    state: started
+
+- name: Create systemd user directory
   file:
-    path: "{{ ansible_env.HOME }}/.config/{{ item }}"
+    path: "{{ ansible_env.HOME }}/.config/systemd/user"
     state: directory
     mode: "0755"
-  loop:
-    - hypr
-    - waybar
-    - mako
-    - foot
-  tags:
-    - desktop
-    - config
 
+- name: Create SDDM config directory
+  become: true
+  file:
+    path: /etc/sddm.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Create NetworkManager conf.d directory
+  become: true
+  file:
+    path: /etc/NetworkManager/conf.d
+    state: directory
+    mode: "0755"
+
+- name: Configure SDDM for auto-login
+  become: true
+  template:
+    src: sddm-autologin.conf.j2
+    dest: /etc/sddm.conf.d/autologin.conf
+    mode: "0644"
+    backup: yes
+
+- name: Configure iwlwifi driver optimizations for Intel WiFi stability
+  become: true
+  copy:
+    src: iwlwifi.conf
+    dest: /etc/modprobe.d/iwlwifi.conf
+    mode: "0644"
+    backup: yes
+  notify: rebuild initramfs
+
+- name: Configure NetworkManager WiFi stability settings
+  become: true
+  copy:
+    src: networkmanager-wifi.conf
+    dest: /etc/NetworkManager/conf.d/wifi-stability.conf
+    mode: "0644"
+    backup: yes
+  notify: restart NetworkManager
+
+- name: Add udev rule to disable WiFi power saving
+  become: true
+  copy:
+    src: 70-wifi-powersave.rules
+    dest: /etc/udev/rules.d/70-wifi-powersave.rules
+    mode: "0644"
+    backup: yes
+  notify: reload udev rules
+
+- name: Configure Plymouth boot splash theme
+  become: true
+  lineinfile:
+    path: /etc/plymouth/plymouthd.conf
+    regexp: "^Theme="
+    line: "Theme=spinner"
+    create: yes
+    mode: "0644"
+    backup: yes
+
+- name: Check if plymouth is already in mkinitcpio hooks
+  become: true
+  shell: grep "^HOOKS=" /etc/mkinitcpio.conf | grep -q plymouth
+  register: plymouth_check
+  failed_when: false
+  changed_when: false
+
+- name: Create timestamped backup of mkinitcpio.conf
+  become: true
+  copy:
+    src: /etc/mkinitcpio.conf
+    dest: "/etc/mkinitcpio.conf.bak.{{ ansible_date_time.epoch }}"
+    remote_src: yes
+    mode: '0644'
+  when: plymouth_check.rc != 0
+
+- name: Check if system uses base udev or base systemd
+  become: true
+  shell: grep "^HOOKS=" /etc/mkinitcpio.conf
+  register: hooks_line
+  changed_when: false
+
+- name: Add Plymouth to mkinitcpio hooks after base udev (preserving existing hooks)
+  become: true
+  replace:
+    path: /etc/mkinitcpio.conf
+    regexp: '^(HOOKS=\([^)]*base udev)(\s+)'
+    replace: '\1 plymouth\2'
+    backup: yes
+  when:
+    - plymouth_check.rc != 0
+    - "'base udev' in hooks_line.stdout"
+  notify: rebuild initramfs
+
+- name: Add Plymouth to mkinitcpio hooks after base systemd (preserving existing hooks)
+  become: true
+  replace:
+    path: /etc/mkinitcpio.conf
+    regexp: '^(HOOKS=\([^)]*base systemd)(\s+)'
+    replace: '\1 plymouth\2'
+    backup: yes
+  when:
+    - plymouth_check.rc != 0
+    - "'base systemd' in hooks_line.stdout"
+  notify: rebuild initramfs
+
+- name: Warn if neither base udev nor base systemd found
+  debug:
+    msg: "WARNING: Could not add Plymouth hook - neither 'base udev' nor 'base systemd' found in HOOKS"
+  when:
+    - plymouth_check.rc != 0
+    - "'base udev' not in hooks_line.stdout"
+    - "'base systemd' not in hooks_line.stdout"
+
+# XDG Mime Type Configuration
+- name: Update desktop database
+  shell: update-desktop-database ~/.local/share/applications
+  become: false
+  changed_when: false
+
+- name: Set default application for images (imv)
+  shell: |
+    xdg-mime default imv.desktop image/png
+    xdg-mime default imv.desktop image/jpeg
+    xdg-mime default imv.desktop image/gif
+    xdg-mime default imv.desktop image/webp
+    xdg-mime default imv.desktop image/bmp
+    xdg-mime default imv.desktop image/tiff
+  become: false
+  changed_when: false
+
+- name: Set default application for PDFs (evince)
+  shell: xdg-mime default org.gnome.Evince.desktop application/pdf
+  become: false
+  changed_when: false
+
+- name: Set default web browser (zen-browser)
+  shell: |
+    xdg-settings set default-web-browser zen-browser.desktop
+    xdg-mime default zen-browser.desktop x-scheme-handler/http
+    xdg-mime default zen-browser.desktop x-scheme-handler/https
+  become: false
+  changed_when: false
+
+- name: Set default application for videos (mpv)
+  shell: |
+    xdg-mime default mpv.desktop video/mp4
+    xdg-mime default mpv.desktop video/x-msvideo
+    xdg-mime default mpv.desktop video/x-matroska
+    xdg-mime default mpv.desktop video/webm
+    xdg-mime default mpv.desktop video/quicktime
+  become: false
+  changed_when: false
+
+- name: Install desktop AUR packages
+  kewlfft.aur.aur:
+    name: "{{ item }}"
+    use: paru
+    state: present
+    extra_args: --noconfirm --needed
+  become: yes
+  become_user: aur_builder
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  loop: "{{ aur_packages.desktop }}"
+  ignore_errors: yes
+  register: aur_results

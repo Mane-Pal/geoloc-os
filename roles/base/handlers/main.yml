@@ -1,0 +1,18 @@
+---
+# Base role handlers
+
+- name: refresh pacman cache
+  become: true
+  pacman:
+    update_cache: yes
+
+- name: rebuild initramfs
+  become: true
+  command: mkinitcpio -P
+  when: ansible_facts['virtualization_type'] != "docker"
+
+- name: restart systemd-logind
+  become: true
+  systemd:
+    name: systemd-logind
+    state: restarted

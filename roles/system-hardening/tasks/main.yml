@@ -1,0 +1,52 @@
+---
+# System Hardening role - Security and firewall configuration
+
+- name: Install UFW firewall
+  become: true
+  pacman:
+    name: ufw
+    state: present
+
+- name: Configure UFW default policy - deny incoming
+  become: true
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Configure UFW default policy - allow outgoing
+  become: true
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Allow SSH through firewall
+  become: true
+  community.general.ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+    comment: 'Allow SSH'
+
+- name: Allow Docker DNS from containers
+  become: true
+  community.general.ufw:
+    rule: allow
+    direction: in
+    proto: udp
+    from_ip: 172.16.0.0/12
+    to_ip: 172.17.0.1
+    to_port: '53'
+    comment: 'Allow Docker DNS'
+  when: "'docker' in packages.dev"
+
+- name: Enable UFW firewall
+  become: true
+  community.general.ufw:
+    state: enabled
+
+- name: Enable UFW service to start on boot
+  become: true
+  systemd:
+    name: ufw
+    enabled: yes
+    state: started

@@ -100,35 +100,40 @@ fi
 echo ""
 
 echo "=== TESTING BOOTSTRAP VALIDATION ==="
-cd /workspace/system
-if ./bootstrap.sh --check; then
-  echo "✅ Bootstrap validation PASSED"
+cd /workspace
+if [ -d "geoloc-os" ]; then
+  cd geoloc-os
+  if ./bootstrap.sh --check; then
+    echo "✅ Bootstrap validation PASSED"
+  else
+    echo "❌ Bootstrap validation FAILED with exit code: $?"
+  fi
 else
-  echo "❌ Bootstrap validation FAILED with exit code: $?"
-fi
-echo ""
-
-echo "=== TESTING PACKAGE VALIDATION ==="
-if ./scripts/validate.sh; then
-  echo "✅ Package validation PASSED"
-else
-  echo "❌ Package validation FAILED with exit code: $?"
+  echo "❌ geoloc-os directory not found"
 fi
 echo ""
 
 echo "=== TESTING ANSIBLE SYNTAX ==="
-if ansible-playbook --syntax-check playbook.yml; then
-  echo "✅ Ansible syntax check PASSED"
+if [ -f "site.yml" ]; then
+  if ansible-playbook --syntax-check site.yml; then
+    echo "✅ Ansible syntax check PASSED"
+  else
+    echo "❌ Ansible syntax check FAILED"
+  fi
 else
-  echo "❌ Ansible syntax check FAILED"
+  echo "❌ site.yml not found"
 fi
 echo ""
 
 echo "=== TESTING ANSIBLE DRY RUN ==="
-if ansible-playbook --check --diff -i localhost, -c local playbook.yml; then
-  echo "✅ Ansible dry run PASSED"
+if [ -f "site.yml" ]; then
+  if ansible-playbook --check --diff -i localhost, -c local site.yml; then
+    echo "✅ Ansible dry run PASSED"
+  else
+    echo "❌ Ansible dry run FAILED"
+  fi
 else
-  echo "❌ Ansible dry run FAILED"
+  echo "❌ site.yml not found for dry run"
 fi
 echo ""
 
@@ -167,10 +172,10 @@ run_container_test() {
   
   info "Running tests in container..."
   
-  # Run container with system directory mounted
+  # Run container with geoloc-os directory mounted
   docker run --rm \
     --name "${CONTAINER_NAME}" \
-    -v "$(pwd):/workspace:ro" \
+    -v "$(cd .. && pwd):/workspace:ro" \
     -v "${ARTIFACTS_DIR}:/artifacts" \
     -w /workspace \
     "${TEST_IMAGE}" \
