@@ -192,9 +192,8 @@
 
 - name: Set default web browser (zen-browser)
   shell: |
-    xdg-settings set default-web-browser zen-browser.desktop
-    xdg-mime default zen-browser.desktop x-scheme-handler/http
-    xdg-mime default zen-browser.desktop x-scheme-handler/https
+    xdg-mime default zen.desktop x-scheme-handler/http
+    xdg-mime default zen.desktop x-scheme-handler/https
   become: false
   changed_when: false
 
