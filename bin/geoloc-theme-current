@@ -9,10 +9,8 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Find the dotfiles directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/dotfiles"
-THEMES_DIR="$DOTFILES_DIR/themes"
+# Use deployed themes directory
+THEMES_DIR="$HOME/.config/themes"
 
 if [[ ! -d "$THEMES_DIR" ]]; then
   echo -e "${RED}Error: Themes directory not found: $THEMES_DIR${NC}" >&2

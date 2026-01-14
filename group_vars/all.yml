@@ -15,7 +15,7 @@ packages:
     - git
     - zsh
     - tmux
-    - foot
+    - kitty
     - neovim
     - python-pynvim
     - bat
@@ -33,6 +33,7 @@ packages:
     - httpie
     - atuin
     - paru
+    - starship
 
   # Desktop environment (GUI + services)
   desktop:

@@ -27,10 +27,8 @@ warn() {
   echo -e "${YELLOW}[WARNING] $*${NC}"
 }
 
-# Find the dotfiles directory (assumes it's a sibling to system/)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/dotfiles"
-THEMES_DIR="$DOTFILES_DIR/themes"
+# Use deployed themes directory
+THEMES_DIR="$HOME/.config/themes"
 
 if [[ ! -d "$THEMES_DIR" ]]; then
   error "Themes directory not found: $THEMES_DIR"
@@ -86,13 +84,20 @@ apply_theme() {
 reload_applications() {
   info "Reloading applications..."
   
-  # Reload foot terminal (if running)
-  if pgrep -x foot >/dev/null; then
-    info "Reloading foot terminal..."
-    # Touch config file to trigger reload
-    touch "$HOME/.config/foot/foot.ini" 2>/dev/null || true
+  # Reload tmux (if running)
+  if pgrep -x tmux >/dev/null; then
+    info "Reloading tmux config..."
+    tmux source-file ~/.config/tmux/tmux.conf 2>/dev/null || warn "Could not reload tmux"
+    # Refresh all tmux clients
+    tmux refresh-client 2>/dev/null || true
   fi
-  
+
+  # Reload Kitty terminal (hot-reload via signal)
+  if pgrep -x kitty >/dev/null; then
+    info "Reloading Kitty terminal..."
+    kill -SIGUSR1 $(pgrep -x kitty) 2>/dev/null || warn "Could not reload Kitty"
+  fi
+
   # Reload mako notifications
   if pgrep -x mako >/dev/null; then
     info "Reloading mako notifications..."
@@ -110,6 +115,11 @@ reload_applications() {
   if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
     info "Reloading Hyprland config..."
     hyprctl reload 2>/dev/null || warn "Could not reload Hyprland"
+  fi
+
+  # Neovim (theme.lua symlink auto-updates, LazyVim will pick it up)
+  if pgrep -x nvim >/dev/null; then
+    info "Neovim: theme file updated, run :Lazy reload or restart nvim to apply"
   fi
 }
 
