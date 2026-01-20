@@ -8,6 +8,15 @@
     name: "{{ packages.extras }}"
     state: present
 
+# CUPS Printing Service
+- name: Enable CUPS printing service
+  become: true
+  systemd:
+    name: cups
+    enabled: yes
+    state: started
+  when: "'cups' in packages.extras"
+
 # ClamAV Configuration
 - name: Create ClamAV log directory
   become: true

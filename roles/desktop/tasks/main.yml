@@ -220,3 +220,4 @@
   loop: "{{ aur_packages.desktop }}"
   ignore_errors: yes
   register: aur_results
+  when: aur_packages.desktop | length > 0

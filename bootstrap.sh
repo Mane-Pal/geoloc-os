@@ -44,6 +44,14 @@ install_prerequisites() {
     log "Ansible is already installed"
   fi
 
+  # Install just if not present
+  if ! command -v just &>/dev/null; then
+    log "Installing just..."
+    sudo pacman -S --needed --noconfirm just
+  else
+    log "just is already installed"
+  fi
+
   # Install paru if no AUR helper is present
   if ! command -v paru &>/dev/null && ! command -v yay &>/dev/null; then
     log "Installing paru AUR helper..."
@@ -68,6 +76,10 @@ install_prerequisites() {
   else
     log "AUR helper already installed"
   fi
+
+  # Install Ansible AUR collection
+  log "Installing Ansible AUR collection..."
+  ansible-galaxy collection install kewlfft.aur --upgrade
 }
 
 run_playbook() {
@@ -93,6 +105,13 @@ OPTIONS:
 EXAMPLES:
   $0              Full installation
   $0 --check      Validate configuration without installing
+
+After bootstrap, use 'just' to run individual components:
+  just base       Install base packages only
+  just desktop    Install desktop environment only
+  just dev        Install development tools only
+  just extras     Install optional packages only
+  just hardening  Apply security hardening only
 
 EOF
 }

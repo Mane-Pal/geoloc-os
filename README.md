@@ -1,72 +1,87 @@
 # Geoloc OS
 
-Ansible-based workstation provisioning for Arch Linux systems.
+Ansible-based workstation provisioning for Arch Linux systems, with a Justfile wrapper for easy usage.
 
 ## Quick Start
 
 ```bash
-# Full workstation setup
+# Bootstrap (installs ansible, paru, and AUR collection)
 ./bootstrap.sh
 
-# Minimal server (no desktop)
-./bootstrap.sh --tags base,services
-
-# Development machine (no desktop)
-./bootstrap.sh --tags base,services,development
+# Or run specific components with just
+just base        # Install base CLI packages
+just desktop     # Install desktop environment
+just dev         # Install development tools
+just extras      # Install optional packages
+just hardening   # Apply system hardening
 ```
 
 ## Available Roles
 
-- **base** - Essential packages (git, zsh, neovim, cli tools)
-- **services** - System services (NetworkManager, audio, bluetooth)
-- **desktop** - Hyprland desktop environment
-- **development** - Dev tools (Docker, Kubernetes, Terraform, Python)
-- **optional** - Nice-to-have apps (Slack, Spotify, LibreOffice)
+| Role | Tag | Description |
+|------|-----|-------------|
+| **base** | `base` | Essential packages (git, zsh, neovim, modern CLI tools) |
+| **desktop** | `desktop` | Hyprland desktop, audio (pipewire), fonts, GUI apps |
+| **development** | `development` | Docker, Kubernetes, Terraform, Python, dev tools |
+| **extras** | `extras` | Optional apps (Slack, Spotify, LibreOffice, ClamAV) |
+| **system-hardening** | `system-hardening` | UFW firewall configuration |
+
+## Usage
+
+### Full Installation
+```bash
+./bootstrap.sh
+```
+
+### Using Just (after bootstrap)
+```bash
+just              # Show available commands
+just ansible      # Run full ansible playbook
+just base         # Run only base role
+just desktop      # Run only desktop role
+just dev          # Run only development role
+just extras       # Run only extras role
+just hardening    # Run only system-hardening role
+just check        # Dry-run validation
+```
+
+### Manual Ansible
+```bash
+# Run specific tags
+ansible-playbook site.yml --tags base,desktop --ask-become-pass
+
+# Dry-run
+ansible-playbook site.yml --check
+```
 
 ## Testing
 
 ```bash
-# Test syntax and dry-run
-ansible-playbook site.yml --check
+# Container testing (fast validation)
+./tests/container-test.sh
 
-# Container testing (fast - 30s)
-./tests/test-system.sh container
-
-# Test specific roles
-./tests/test-system.sh container --tags base,services
-
-# VM testing (full validation - 3min)
-./tests/test-system.sh vm-headless
-```
-
-## Machine Profiles
-
-```bash
-# Personal workstation (everything)
-./bootstrap.sh
-
-# Work laptop (no games/media)
-ansible-playbook site.yml --skip-tags optional
-
-# Server (no GUI)
-ansible-playbook site.yml --tags base,services,development
+# Syntax and dry-run check
+just check
 ```
 
 ## Project Structure
 
 ```
 geoloc-os/
-├── site.yml              # Main playbook
-├── bootstrap.sh          # Setup script
-├── roles/                # Ansible roles
-│   ├── base/            # Core packages
-│   ├── services/        # System services
-│   ├── desktop/         # GUI environment
-│   ├── development/     # Dev tools
-│   └── optional/        # Extra packages
-├── group_vars/          # Global variables
-├── tests/               # Test infrastructure
-└── bin/                 # Utility scripts
+├── justfile              # Task runner (just commands)
+├── site.yml              # Main ansible playbook
+├── bootstrap.sh          # Initial setup script
+├── ansible.cfg           # Ansible configuration
+├── group_vars/
+│   └── all.yml           # Package lists and variables
+├── roles/
+│   ├── base/             # Core CLI tools & system config
+│   ├── desktop/          # Hyprland + GUI environment
+│   ├── development/      # Dev tools & containers
+│   ├── extras/           # Optional applications
+│   └── system-hardening/ # Firewall configuration
+├── bin/                  # Utility scripts
+└── tests/                # Test infrastructure
 ```
 
 ## Requirements
@@ -77,4 +92,4 @@ geoloc-os/
 
 ## Related
 
-- [Dotfiles](https://github.com/Mane-Pal/dotfiles) - Configuration files managed with GNU Stow
+- **Dotfiles** - Configuration files managed with GNU Stow (separate directory)

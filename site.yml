@@ -14,11 +14,11 @@
         msg: "Starting Geoloc OS setup: Base + Desktop + Development + Extras"
 
   roles:
-    - base
-    - desktop
-    - development
-    - extras
-    - system-hardening
+    - { role: base, tags: ["base"] }
+    - { role: desktop, tags: ["desktop"] }
+    - { role: development, tags: ["development"] }
+    - { role: extras, tags: ["extras"] }
+    - { role: system-hardening, tags: ["system-hardening"] }
 
   post_tasks:
     - name: Display completion message

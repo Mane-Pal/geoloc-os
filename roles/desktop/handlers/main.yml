@@ -1,11 +1,7 @@
 ---
 # Handlers for desktop role
 # These are triggered by notify directives in tasks
-
-- name: rebuild initramfs
-  become: true
-  shell: |
-    mkinitcpio -P
+# Note: 'rebuild initramfs' handler is defined in base role
 
 - name: restart NetworkManager
   become: true
@@ -18,4 +14,3 @@
   shell: |
     udevadm control --reload-rules
     udevadm trigger --subsystem-match=net
-
