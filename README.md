@@ -14,17 +14,19 @@ just desktop     # Install desktop environment
 just dev         # Install development tools
 just extras      # Install optional packages
 just hardening   # Apply system hardening
+just dotfiles    # Deploy dotfiles via stow
 ```
 
 ## Available Roles
 
 | Role | Tag | Description |
 |------|-----|-------------|
-| **base** | `base` | Essential packages (git, zsh, neovim, modern CLI tools) |
+| **base** | `base` | Essential packages, locale/timezone, modern CLI tools |
 | **desktop** | `desktop` | Hyprland desktop, audio (pipewire), fonts, GUI apps |
 | **development** | `development` | Docker, Kubernetes, Terraform, Python, dev tools |
 | **extras** | `extras` | Optional apps (Slack, Spotify, LibreOffice, ClamAV) |
 | **system-hardening** | `system-hardening` | UFW firewall configuration |
+| **dotfiles** | `dotfiles` | Clone and deploy dotfiles via GNU Stow |
 
 ## Usage
 
@@ -42,6 +44,7 @@ just desktop      # Run only desktop role
 just dev          # Run only development role
 just extras       # Run only extras role
 just hardening    # Run only system-hardening role
+just dotfiles     # Run only dotfiles role
 just check        # Dry-run validation
 ```
 
@@ -78,6 +81,7 @@ geoloc-os/
 │   ├── base/             # Core CLI tools & system config
 │   ├── desktop/          # Hyprland + GUI environment
 │   ├── development/      # Dev tools & containers
+│   ├── dotfiles/         # Dotfiles deployment via stow
 │   ├── extras/           # Optional applications
 │   └── system-hardening/ # Firewall configuration
 ├── bin/                  # Utility scripts
@@ -90,6 +94,9 @@ geoloc-os/
 - Internet connection
 - `sudo` access
 
-## Related
+## Configuration
 
-- **Dotfiles** - Configuration files managed with GNU Stow (separate directory)
+Edit `group_vars/all.yml` to customize:
+- Package lists for each role
+- Dotfiles repository URL (`dotfiles_repo`)
+- Stow packages to deploy (`dotfiles_packages`)

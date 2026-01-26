@@ -19,14 +19,6 @@
     direction: outgoing
     policy: allow
 
-- name: Allow SSH through firewall
-  become: true
-  community.general.ufw:
-    rule: allow
-    port: '22'
-    proto: tcp
-    comment: 'Allow SSH'
-
 - name: Allow Docker DNS from containers
   become: true
   community.general.ufw:

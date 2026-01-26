@@ -26,6 +26,9 @@ extras *args='': (ansible "--tags" "extras" args)
 # Apply system hardening (firewall, security)
 hardening *args='': (ansible "--tags" "system-hardening" args)
 
+# Deploy dotfiles (clone and stow)
+dotfiles *args='': (ansible "--tags" "dotfiles" args)
+
 # Run playbook in check mode (dry-run)
 check:
     @just ansible --check

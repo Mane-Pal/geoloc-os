@@ -1,0 +1,38 @@
+---
+# Dotfiles role - Clone and deploy personal dotfiles using GNU Stow
+
+- name: Ensure stow is installed
+  become: true
+  pacman:
+    name: stow
+    state: present
+
+- name: Check if dotfiles already cloned
+  stat:
+    path: "{{ dotfiles_dest }}"
+  register: dotfiles_dir
+
+- name: Clone dotfiles repository
+  git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "{{ dotfiles_dest }}"
+    version: "{{ dotfiles_branch | default('main') }}"
+    accept_hostkey: yes
+  when: not dotfiles_dir.stat.exists
+
+- name: Update dotfiles repository
+  git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "{{ dotfiles_dest }}"
+    version: "{{ dotfiles_branch | default('main') }}"
+    update: yes
+  when: dotfiles_dir.stat.exists
+
+- name: Stow dotfiles packages
+  command: stow -v -R {{ item }}
+  args:
+    chdir: "{{ dotfiles_dest }}"
+  loop: "{{ dotfiles_packages }}"
+  register: stow_result
+  changed_when: stow_result.stdout != ''
+  failed_when: stow_result.rc != 0

@@ -7,6 +7,30 @@
   pacman:
     update_cache: yes
 
+# Locale and timezone configuration
+- name: Generate locales
+  become: true
+  locale_gen:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - en_US.UTF-8
+    - da_DK.UTF-8
+
+- name: Set system locale
+  become: true
+  copy:
+    content: |
+      LANG=en_US.UTF-8
+      LC_TIME=da_DK.UTF-8
+    dest: /etc/locale.conf
+    mode: '0644'
+
+- name: Set timezone to Copenhagen
+  become: true
+  timezone:
+    name: Europe/Copenhagen
+
 # Performance optimizations
 - name: Configure pacman with optimizations
   become: true

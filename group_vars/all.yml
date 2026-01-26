@@ -7,6 +7,28 @@ home_dir: "{{ ansible_env.HOME }}"
 config_dir: "{{ home_dir }}/.config"
 local_bin: "{{ home_dir }}/.local/bin"
 
+# Dotfiles configuration
+dotfiles_repo: "https://github.com/manepal/dotfiles.git"
+dotfiles_dest: "{{ home_dir }}/dotfiles"
+dotfiles_branch: "main"
+dotfiles_packages:
+  - btop
+  - fastfetch
+  - fontconfig
+  - git
+  - gtk
+  - hypr
+  - kitty
+  - lazygit
+  - mako
+  - nvim
+  - scripts
+  - starship
+  - tmux
+  - waybar
+  - wofi
+  - zsh
+
 # Consolidated package lists
 packages:
   # Essential system packages

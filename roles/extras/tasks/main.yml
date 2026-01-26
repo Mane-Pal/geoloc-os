@@ -43,6 +43,13 @@
     mode: '0644'
     backup: yes
 
+- name: Install ClamAV virus event handler
+  become: true
+  copy:
+    src: virus-event.sh
+    dest: /etc/clamav/virus-event.sh
+    mode: '0755'
+
 - name: Update ClamAV virus database
   become: true
   command: freshclam

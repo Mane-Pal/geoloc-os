@@ -19,6 +19,7 @@
     - { role: development, tags: ["development"] }
     - { role: extras, tags: ["extras"] }
     - { role: system-hardening, tags: ["system-hardening"] }
+    - { role: dotfiles, tags: ["dotfiles"] }
 
   post_tasks:
     - name: Display completion message
@@ -28,4 +29,4 @@
 
           Next steps:
           1. Reboot to ensure all services are running
-          2. Set up your personal dotfiles repository
+          2. Log out and back in for shell changes to take effect
