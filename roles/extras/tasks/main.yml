@@ -8,15 +8,6 @@
     name: "{{ packages.extras }}"
     state: present
 
-# CUPS Printing Service
-- name: Enable CUPS printing service
-  become: true
-  systemd:
-    name: cups
-    enabled: yes
-    state: started
-  when: "'cups' in packages.extras"
-
 # ClamAV Configuration
 - name: Create ClamAV log directory
   become: true
@@ -53,7 +44,12 @@
 - name: Update ClamAV virus database
   become: true
   command: freshclam
-  ignore_errors: yes
+  register: freshclam_result
+  failed_when:
+    - freshclam_result.rc != 0
+    - "'database is up to date' not in freshclam_result.stderr"
+    - "'locked by another process' not in freshclam_result.stderr"
+  changed_when: "'Database updated' in freshclam_result.stdout"
 
 - name: Enable and start ClamAV services
   become: true

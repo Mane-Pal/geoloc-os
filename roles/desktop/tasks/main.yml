@@ -13,7 +13,11 @@
   shell: yes | pacman -S pipewire-jack --noconfirm
   args:
     creates: /usr/lib/pipewire-0.3/jack/libjack.so
-  ignore_errors: true
+  register: pipewire_jack_result
+  failed_when:
+    - pipewire_jack_result.rc != 0
+    - "'is up to date' not in pipewire_jack_result.stdout"
+    - "'there is nothing to do' not in pipewire_jack_result.stdout"
 
 - name: Enable NetworkManager
   become: true
@@ -42,6 +46,11 @@
     enabled: yes
     state: started
 
+- name: Set default power profile to balanced
+  command: powerprofilesctl set balanced
+  become: false
+  changed_when: false
+
 - name: Enable Avahi daemon
   become: true
   systemd:
@@ -69,7 +78,7 @@
     state: directory
     mode: "0755"
 
-- name: Configure SDDM for auto-login
+- name: Configure SDDM display manager
   become: true
   template:
     src: sddm-autologin.conf.j2
@@ -218,6 +227,16 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
   loop: "{{ aur_packages.desktop }}"
-  ignore_errors: yes
-  register: aur_results
+  register: aur_desktop_results
   when: aur_packages.desktop | length > 0
+
+- name: Report failed desktop AUR packages
+  fail:
+    msg: |
+      The following desktop AUR packages failed to install:
+      {% for result in aur_desktop_results.results | selectattr('failed', 'defined') | selectattr('failed') %}
+      - {{ result.item }}: {{ result.msg | default('unknown error') }}
+      {% endfor %}
+  when:
+    - aur_desktop_results.results is defined
+    - aur_desktop_results.results | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0

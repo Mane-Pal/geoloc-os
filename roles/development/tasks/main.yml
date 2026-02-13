@@ -19,76 +19,97 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
   loop: "{{ aur_packages.dev }}"
-  ignore_errors: yes
-  register: aur_results
+  register: aur_dev_results
   when: aur_packages.dev | length > 0
 
-- name: Add user to docker group
+- name: Report failed development AUR packages
+  fail:
+    msg: |
+      The following development AUR packages failed to install:
+      {% for result in aur_dev_results.results | selectattr('failed', 'defined') | selectattr('failed') %}
+      - {{ result.item }}: {{ result.msg | default('unknown error') }}
+      {% endfor %}
+  when:
+    - aur_dev_results.results is defined
+    - aur_dev_results.results | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0
+
+# --- Rootless Docker Setup ---
+# Runs the Docker daemon as the current user instead of root.
+# Files created in bind mounts are owned by the host user, not root.
+
+- name: Configure subordinate UID ranges for rootless Docker
   become: true
-  user:
-    name: "{{ ansible_env.USER }}"
-    groups: docker
-    append: yes
+  lineinfile:
+    path: /etc/subuid
+    regexp: "^{{ ansible_env.USER }}:"
+    line: "{{ ansible_env.USER }}:100000:65536"
+    create: yes
+    mode: '0644'
   when: "'docker' in packages.dev"
 
-- name: Create Docker config directory
+- name: Configure subordinate GID ranges for rootless Docker
   become: true
+  lineinfile:
+    path: /etc/subgid
+    regexp: "^{{ ansible_env.USER }}:"
+    line: "{{ ansible_env.USER }}:100000:65536"
+    create: yes
+    mode: '0644'
+  when: "'docker' in packages.dev"
+
+- name: Enable user lingering for rootless Docker at boot
+  become: true
+  command: loginctl enable-linger {{ ansible_env.USER }}
+  changed_when: false
+  when: "'docker' in packages.dev"
+
+- name: Disable system Docker service (using rootless instead)
+  become: true
+  systemd:
+    name: docker
+    enabled: no
+    state: stopped
+  failed_when: false
+  when: "'docker' in packages.dev"
+
+- name: Disable system Docker socket
+  become: true
+  systemd:
+    name: docker.socket
+    enabled: no
+    state: stopped
+  failed_when: false
+  when: "'docker' in packages.dev"
+
+- name: Create user Docker config directory
   file:
-    path: /etc/docker
+    path: "{{ ansible_env.HOME }}/.config/docker"
     state: directory
     mode: '0755'
   when: "'docker' in packages.dev"
 
-- name: Configure Docker daemon
-  become: true
+- name: Configure rootless Docker daemon
   copy:
-    src: docker-daemon.json
-    dest: /etc/docker/daemon.json
+    src: docker-rootless-daemon.json
+    dest: "{{ ansible_env.HOME }}/.config/docker/daemon.json"
     mode: '0644'
     backup: yes
   when: "'docker' in packages.dev"
-  notify: restart docker
+  notify: restart rootless docker
 
-- name: Create systemd-resolved config directory
-  become: true
-  file:
-    path: /etc/systemd/resolved.conf.d
-    state: directory
-    mode: '0755'
-  when: "'docker' in packages.dev"
-
-- name: Expose systemd-resolved to Docker network
-  become: true
-  copy:
-    src: docker-resolved.conf
-    dest: /etc/systemd/resolved.conf.d/20-docker-dns.conf
-    mode: '0644'
-    backup: yes
-  when: "'docker' in packages.dev"
-  notify: restart systemd-resolved
-
-- name: Create Docker systemd override directory
-  become: true
-  file:
-    path: /etc/systemd/system/docker.service.d
-    state: directory
-    mode: '0755'
-  when: "'docker' in packages.dev"
-
-- name: Prevent Docker from blocking boot
-  become: true
-  copy:
-    src: docker-no-block-boot.conf
-    dest: /etc/systemd/system/docker.service.d/no-block-boot.conf
-    mode: '0644'
-    backup: yes
-  when: "'docker' in packages.dev"
-  notify: systemd daemon-reload
-
-- name: Enable Docker service
-  become: true
+- name: Enable rootless Docker user service
   systemd:
     name: docker
     enabled: yes
     state: started
+    scope: user
   when: "'docker' in packages.dev"
+
+# --- systemd-resolved (general DNS resolution) ---
+
+- name: Enable systemd-resolved
+  become: true
+  systemd:
+    name: systemd-resolved
+    enabled: yes
+    state: started

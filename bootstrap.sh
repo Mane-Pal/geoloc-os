@@ -77,9 +77,9 @@ install_prerequisites() {
     log "AUR helper already installed"
   fi
 
-  # Install Ansible AUR collection
-  log "Installing Ansible AUR collection..."
-  ansible-galaxy collection install kewlfft.aur --upgrade
+  # Install Ansible collections from requirements.yml
+  log "Installing Ansible collections..."
+  ansible-galaxy collection install -r "$SCRIPT_DIR/requirements.yml" --upgrade
 }
 
 run_playbook() {

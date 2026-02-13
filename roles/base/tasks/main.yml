@@ -131,6 +131,81 @@
     mode: '0644'
     backup: yes
 
+# System services
+- name: Enable systemd-timesyncd (NTP time sync)
+  become: true
+  systemd:
+    name: systemd-timesyncd
+    enabled: yes
+    state: started
+
+- name: Enable fstrim timer for SSD TRIM
+  become: true
+  systemd:
+    name: fstrim.timer
+    enabled: yes
+    state: started
+
+# Journald log retention
+- name: Create journald config directory
+  become: true
+  file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Configure journald log retention
+  become: true
+  copy:
+    src: journald-retention.conf
+    dest: /etc/systemd/journald.conf.d/retention.conf
+    mode: "0644"
+    backup: yes
+
+# Reflector mirror optimization
+- name: Configure reflector for fast pacman mirrors
+  become: true
+  copy:
+    src: reflector.conf
+    dest: /etc/xdg/reflector/reflector.conf
+    mode: "0644"
+    backup: yes
+
+- name: Enable reflector timer for periodic mirror updates
+  become: true
+  systemd:
+    name: reflector.timer
+    enabled: yes
+    state: started
+
+# zram compressed swap
+- name: Configure zram-generator for compressed swap
+  become: true
+  copy:
+    src: zram-generator.conf
+    dest: /etc/systemd/zram-generator.conf
+    mode: "0644"
+    backup: yes
+
+# XDG user directories
+- name: Create standard XDG user directories
+  command: xdg-user-dirs-update
+  become: false
+  changed_when: false
+
+# pkgfile command-not-found integration
+- name: Update pkgfile database
+  become: true
+  command: pkgfile --update
+  changed_when: false
+
+- name: Enable pkgfile update timer
+  become: true
+  systemd:
+    name: pkgfile-update.timer
+    enabled: yes
+    state: started
+
 # AUR helper setup
 - name: Verify paru is installed and functional
   command: paru --version
@@ -146,6 +221,7 @@
     name: aur_builder
     create_home: yes
     group: wheel
+    shell: /usr/sbin/nologin
   become: true
   when: paru_check.rc == 0
 

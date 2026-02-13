@@ -1,35 +1,6 @@
 ---
-# Simplified Geoloc OS Configuration
-# All packages and settings in one place
-
-# User settings
-home_dir: "{{ ansible_env.HOME }}"
-config_dir: "{{ home_dir }}/.config"
-local_bin: "{{ home_dir }}/.local/bin"
-
-# Dotfiles configuration
-dotfiles_repo: "https://github.com/manepal/dotfiles.git"
-dotfiles_dest: "{{ home_dir }}/dotfiles"
-dotfiles_branch: "main"
-dotfiles_packages:
-  - btop
-  - fastfetch
-  - fontconfig
-  - git
-  - gtk
-  - hypr
-  - kitty
-  - lazygit
-  - mako
-  - nvim
-  - scripts
-  - starship
-  - tmux
-  - waybar
-  - wofi
-  - zsh
-
 # Consolidated package lists
+
 packages:
   # Essential system packages
   base:
@@ -37,7 +8,6 @@ packages:
     - git
     - zsh
     - tmux
-    - kitty
     - neovim
     - python-pynvim
     - bat
@@ -53,9 +23,16 @@ packages:
     - gum
     - curlie
     - httpie
-    - atuin
     - paru
     - starship
+    - stow
+    - uv
+    - yazi
+    # System maintenance
+    - reflector
+    - pkgfile
+    - zram-generator
+    - xdg-user-dirs
 
   # Desktop environment (GUI + services)
   desktop:
@@ -63,7 +40,7 @@ packages:
     - pipewire
     - pipewire-pulse
     - pipewire-alsa
-    - pipewire-jack
+    # pipewire-jack installed via shell task (handles jack2 conflict)
     - wireplumber
     - networkmanager
     - bluez
@@ -78,6 +55,8 @@ packages:
     - hypridle
     - hyprpicker
     - waybar
+    - wofi
+    - fcitx5
     - mako
     - swaybg
     - wl-clipboard
@@ -96,7 +75,6 @@ packages:
     - playerctl
     - udiskie
     - rsync
-    - thunar
     - git-delta
     - pavucontrol
     - network-manager-applet
@@ -109,6 +87,7 @@ packages:
     - ttf-liberation
     - ttf-firacode-nerd
     - ttf-jetbrains-mono-nerd
+    - otf-commit-mono-nerd
     # Media
     - gimp
     - imagemagick
@@ -116,7 +95,6 @@ packages:
     - mpv
     - evince
     - mediainfo
-    - firefox
     # System utilities
     - plocate
     - clipse
@@ -125,8 +103,10 @@ packages:
     - libnotify
     # Network stability
     - wireless-regdb
-    - crda
     - iw
+    # Bluetooth audio codecs
+    - libfreeaptx
+    - libldac
 
   # Development tools
   dev:
@@ -140,11 +120,14 @@ packages:
     - yq
     - lsof
     - lazygit
-    # Containers
+    # Containers (rootless Docker)
     - docker
-    - docker-compose
+    - docker-buildx
+    - fuse-overlayfs
+    - slirp4netns
     - podman
     - lazydocker
+    - dive
     # Kubernetes
     - kubectl
     - helm
@@ -153,7 +136,6 @@ packages:
     - kustomize
     - stern
     # Infrastructure
-    - terraform
     - terraform-docs
     - tflint
     # Python
@@ -163,11 +145,7 @@ packages:
     - python-virtualenv
     - python-pipx
     - pyright
-    - python-lsp-server
     - ruff
-    - python-flake8
-    - python-isort
-    - python-typer
     # System dev
     - clang
     - llvm
@@ -178,6 +156,11 @@ packages:
     - claude-code
     - dbeaver
     - postgresql-libs
+    # Security & DevOps
+    - trivy
+    - gitleaks
+    - act
+    - remmina
 
   # Extra applications (optional + work)
   extras:
@@ -198,11 +181,6 @@ packages:
     - networkmanager-fortisslvpn
     - networkmanager-openvpn
     - networkmanager-vpnc
-    # Printing
-    - cups
-    - cups-filters
-    - cups-pdf
-    - system-config-printer
 
 # AUR packages (manual installation required)
 aur_packages:
@@ -210,6 +188,7 @@ aur_packages:
     - walker-bin
     - zen-browser-bin
     - brave-bin
+    - ghostty
     - hyprland-qtutils
     - hyprpolkitagent
     - hyprshot
@@ -217,9 +196,14 @@ aur_packages:
     - wl-clip-persist
     - wlr-randr
     - nwg-displays
+    - catppuccin-sddm-theme-mocha
   dev:
     - hadolint-bin
     - tfupdate-bin
     - opencode-bin
-    - cursor-bin
+    - docker-rootless-extras
+    - gh-dash
+    - sesh-bin
+    - tfenv
+    - aws-session-manager-plugin
   extras: []

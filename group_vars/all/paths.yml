@@ -1,0 +1,6 @@
+---
+# User paths and directories
+
+home_dir: "{{ ansible_facts.env.HOME }}"
+config_dir: "{{ home_dir }}/.config"
+local_bin: "{{ home_dir }}/.local/bin"

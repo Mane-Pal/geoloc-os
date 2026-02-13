@@ -1,0 +1,27 @@
+---
+# Dotfiles configuration
+
+# Local dotfiles path (part of this repo)
+dotfiles_dest: "{{ home_dir }}/git/mane-pal/geoloc-os/dotfiles"
+
+# Remote repo settings (only used if dotfiles_dest doesn't exist)
+dotfiles_repo: "git@github.com:manepal/dotfiles.git"
+dotfiles_branch: "main"
+dotfiles_packages:
+  - btop
+  - fastfetch
+  - fontconfig
+  - git
+  - gtk
+  - ghostty
+  - hypr
+  - lazygit
+  - mako
+  - nvim
+  - opencode
+  - scripts
+  - starship
+  - tmux
+  - waybar
+  - wofi
+  - zsh

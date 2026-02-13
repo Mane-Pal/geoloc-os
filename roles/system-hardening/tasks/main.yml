@@ -19,18 +19,6 @@
     direction: outgoing
     policy: allow
 
-- name: Allow Docker DNS from containers
-  become: true
-  community.general.ufw:
-    rule: allow
-    direction: in
-    proto: udp
-    from_ip: 172.16.0.0/12
-    to_ip: 172.17.0.1
-    to_port: '53'
-    comment: 'Allow Docker DNS'
-  when: "'docker' in packages.dev"
-
 - name: Enable UFW firewall
   become: true
   community.general.ufw:

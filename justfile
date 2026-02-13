@@ -8,7 +8,7 @@ default:
 ansible *args='':
     #!/bin/env bash
     set -euo pipefail
-    ansible-galaxy collection install kewlfft.aur --upgrade
+    ansible-galaxy collection install -r requirements.yml --upgrade
     ansible-playbook --ask-become-pass site.yml {{args}}
 
 # Install base packages and system configuration
@@ -36,6 +36,6 @@ check:
 # Show what packages would be installed
 packages:
     @echo "=== Base packages ==="
-    @grep -E '^\s+- ' group_vars/all.yml | head -40
+    @grep -E '^\s+- ' group_vars/all/packages.yml | head -40
     @echo ""
-    @echo "See group_vars/all.yml for full list"
+    @echo "See group_vars/all/packages.yml for full list"

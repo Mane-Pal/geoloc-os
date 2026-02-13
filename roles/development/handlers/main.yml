@@ -1,19 +1,14 @@
 ---
 # Development role handlers
 
-- name: restart docker
-  become: true
+- name: restart rootless docker
   systemd:
     name: docker
     state: restarted
+    scope: user
 
 - name: restart systemd-resolved
   become: true
   systemd:
     name: systemd-resolved
     state: restarted
-
-- name: systemd daemon-reload
-  become: true
-  systemd:
-    daemon_reload: yes
