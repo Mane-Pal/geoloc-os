@@ -5,6 +5,8 @@ packages:
   # Essential system packages
   base:
     - base-devel
+    - amd-ucode
+    - fwupd
     - git
     - zsh
     - tmux
@@ -46,7 +48,8 @@ packages:
     - bluez
     - bluez-utils
     - plymouth
-    - power-profiles-daemon
+    - tlp
+    - tlp-rdw
     - avahi
     - nss-mdns
     # Hyprland desktop
@@ -107,6 +110,12 @@ packages:
     # Bluetooth audio codecs
     - libfreeaptx
     - libldac
+    # AMD GPU drivers
+    - mesa
+    - vulkan-radeon
+    - libva-mesa-driver
+    - lib32-mesa
+    - lib32-vulkan-radeon
 
   # Development tools
   dev:

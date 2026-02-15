@@ -39,17 +39,19 @@
     name: sddm
     enabled: yes
 
-- name: Enable power-profiles-daemon
+- name: Mask power-profiles-daemon to prevent conflicts with TLP
   become: true
   systemd:
     name: power-profiles-daemon
+    enabled: no
+    masked: yes
+
+- name: Enable TLP power management
+  become: true
+  systemd:
+    name: tlp
     enabled: yes
     state: started
-
-- name: Set default power profile to balanced
-  command: powerprofilesctl set balanced
-  become: false
-  changed_when: false
 
 - name: Enable Avahi daemon
   become: true
@@ -86,6 +88,12 @@
     mode: "0644"
     backup: yes
 
+- name: Check for Intel WiFi hardware
+  shell: lspci | grep -qi "intel.*wireless\|intel.*wi-fi\|intel.*wifi"
+  register: intel_wifi_check
+  failed_when: false
+  changed_when: false
+
 - name: Configure iwlwifi driver optimizations for Intel WiFi stability
   become: true
   copy:
@@ -94,6 +102,7 @@
     mode: "0644"
     backup: yes
   notify: rebuild initramfs
+  when: intel_wifi_check.rc == 0
 
 - name: Configure NetworkManager WiFi stability settings
   become: true
