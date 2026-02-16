@@ -197,6 +197,7 @@
   shell: update-desktop-database ~/.local/share/applications
   become: false
   changed_when: false
+  failed_when: false
 
 - name: Set default application for images (imv)
   shell: |

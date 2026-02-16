@@ -16,17 +16,38 @@ Boot from Arch ISO and run `archinstall`:
 
 Reboot into the bare system.
 
-### Phase 2: Get the repo
+### Phase 2: Pre-install validation (on the old machine)
+
+Before wiping anything, run the container test to catch broken packages:
+
+```bash
+cd ~/git/mane-pal/geoloc-os/geoloc-os
+./tests/container-test.sh
+```
+
+Fix any failures before proceeding. This validates every pacman and AUR package in `packages.yml` against live repos.
+
+### Phase 3: Back up browser profile (on the old machine)
+
+```bash
+cd /tmp && tar czf zen-profile.tar.gz -C ~ .zen
+sudo ufw allow 8080/tcp
+python -m http.server 8080
+```
+
+Leave this running. You'll pull the profile from the new machine in Phase 7.
+
+### Phase 4: Get the repo
 
 ```bash
 sudo pacman -S git
-git clone git@github.com:manepal/geoloc-os.git ~/git/mane-pal/geoloc-os
+git clone https://github.com/manepal/geoloc-os.git ~/git/mane-pal/geoloc-os
 cd ~/git/mane-pal/geoloc-os/geoloc-os
 ```
 
-> If SSH keys aren't set up yet, use HTTPS clone first, then switch remote later after Keeper is running.
+> Switch remote to SSH later after Keeper is running: `git remote set-url origin git@github.com:manepal/geoloc-os.git`
 
-### Phase 3: Bootstrap
+### Phase 5: Bootstrap
 
 ```bash
 ./bootstrap.sh
@@ -34,7 +55,7 @@ cd ~/git/mane-pal/geoloc-os/geoloc-os
 
 This installs ansible, just, paru, and ansible collections, then runs the full playbook. It will prompt for your sudo password once.
 
-### Phase 4: Post-playbook
+### Phase 6: Post-playbook
 
 ```bash
 # Create your monitor config (machine-specific, not in repo)
@@ -50,7 +71,19 @@ ln -sf ~/.config/hypr/backgrounds/current ~/.config/current/background
 sudo reboot
 ```
 
-### Phase 5: First login checklist
+### Phase 7: Restore browser profile
+
+From the new machine, pull the profile from the old machine (still serving on port 8080):
+
+```bash
+curl -o /tmp/zen-profile.tar.gz http://<old-machine-ip>:8080/zen-profile.tar.gz
+tar xzf /tmp/zen-profile.tar.gz -C ~/
+rm /tmp/zen-profile.tar.gz
+```
+
+Then on the old machine, clean up: Ctrl+C the server, `sudo ufw delete allow 8080/tcp`, `rm /tmp/zen-profile.tar.gz`.
+
+### Phase 8: First login checklist
 
 - [ ] SDDM shows Catppuccin theme, Hyprland session starts
 - [ ] `Super+Return` opens Ghostty with tmux
@@ -112,9 +145,8 @@ ansible-playbook site.yml --syntax-check
 ### Testing
 
 ```bash
-./tests/container-test.sh           # Docker-based validation (~30 sec)
-./tests/container-test.sh --cleanup # Clean up test artifacts
-just check                          # Ansible dry-run
+./tests/container-test.sh    # Validate all packages + ansible syntax in container
+just check                   # Ansible dry-run
 ```
 
 ---
