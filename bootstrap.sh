@@ -83,8 +83,9 @@ install_prerequisites() {
 }
 
 run_playbook() {
+  local extra_args=("$@")
   log "Running Ansible playbook..."
-  ansible-playbook -i localhost, -c local site.yml --ask-become-pass
+  ansible-playbook -i localhost, -c local site.yml --ask-become-pass "${extra_args[@]}"
 }
 
 run_validation() {
@@ -99,11 +100,13 @@ Usage: $0 [OPTIONS]
 Setup Geoloc OS - Simplified Arch Linux configuration
 
 OPTIONS:
+  --full, -f      Include extras (work apps, ClamAV, VPN, etc.)
   --check, -c     Run validation checks only (dry-run mode)
   --help, -h      Show this help message
 
 EXAMPLES:
-  $0              Full installation
+  $0              Install base + desktop + dev + hardening + dotfiles
+  $0 --full       Install everything including extras
   $0 --check      Validate configuration without installing
 
 After bootstrap, use 'just' to run individual components:
@@ -118,6 +121,13 @@ EOF
 
 main() {
   case "${1:-}" in
+    --full|-f)
+      log "Starting Geoloc OS setup (full - including extras)..."
+      check_system
+      install_prerequisites
+      run_playbook
+      log "Setup complete! You may want to reboot to ensure all services are running properly."
+      ;;
     --check|-c)
       log "Running in validation mode (dry-run)..."
       check_system
@@ -129,11 +139,12 @@ main() {
       show_help
       ;;
     "")
-      log "Starting Geoloc OS setup..."
+      log "Starting Geoloc OS setup (skipping extras)..."
       check_system
       install_prerequisites
-      run_playbook
+      run_playbook --skip-tags extras
       log "Setup complete! You may want to reboot to ensure all services are running properly."
+      log "Run 'just extras' later to install work apps, ClamAV, VPN, etc."
       ;;
     *)
       error "Unknown option: $1"
