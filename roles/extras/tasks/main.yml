@@ -8,6 +8,31 @@
     name: "{{ packages.extras }}"
     state: present
 
+- name: Install extras AUR packages
+  kewlfft.aur.aur:
+    name: "{{ item }}"
+    use: paru
+    state: present
+    extra_args: --noconfirm --needed
+  become: yes
+  become_user: aur_builder
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  loop: "{{ aur_packages.extras }}"
+  register: aur_extras_results
+  when: aur_packages.extras | length > 0
+
+- name: Report failed extras AUR packages
+  fail:
+    msg: |
+      The following extras AUR packages failed to install:
+      {% for result in aur_extras_results.results | selectattr('failed', 'defined') | selectattr('failed') %}
+      - {{ result.item }}: {{ result.msg | default('unknown error') }}
+      {% endfor %}
+  when:
+    - aur_extras_results.results is defined
+    - aur_extras_results.results | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0
+
 # ClamAV Configuration
 - name: Create ClamAV log directory
   become: true

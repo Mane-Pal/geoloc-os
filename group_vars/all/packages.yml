@@ -25,7 +25,6 @@ packages:
     - gum
     - curlie
     - httpie
-    - paru
     - starship
     - stow
     - uv
@@ -83,7 +82,7 @@ packages:
     - network-manager-applet
     - nm-connection-editor
     # Fonts
-    - ttf-font-awesome
+    - otf-font-awesome
     - noto-fonts
     - noto-fonts-emoji
     - ttf-dejavu
@@ -100,8 +99,6 @@ packages:
     - mediainfo
     # System utilities
     - plocate
-    - clipse
-    - blueberry
     - python-pyxdg
     - libnotify
     # Network stability
@@ -110,10 +107,17 @@ packages:
     # Bluetooth audio codecs
     - libfreeaptx
     - libldac
+    # Now in official repos (previously AUR)
+    - ghostty
+    - hyprpolkitagent
+    - hyprshot
+    - kanshi
+    - wl-clip-persist
+    - wlr-randr
+    - nwg-displays
     # AMD GPU drivers
     - mesa
     - vulkan-radeon
-    - libva-mesa-driver
     - lib32-mesa
     - lib32-vulkan-radeon
 
@@ -145,11 +149,9 @@ packages:
     - kustomize
     - stern
     # Infrastructure
-    - terraform-docs
     - tflint
     # Python
     - pyenv
-    - pyenv-virtualenv
     - python-build
     - python-virtualenv
     - python-pipx
@@ -162,7 +164,6 @@ packages:
     - tree-sitter-cli
     - npm
     # AI & Database
-    - claude-code
     - dbeaver
     - postgresql-libs
     # Security & DevOps
@@ -177,17 +178,10 @@ packages:
     - obsidian
     - xournalpp
     - libreoffice-fresh
-    # Beats
-    - spotify
     # Work specific
     - clamav
     - clamtk
-    - slack-desktop-wayland
-    - keeper-commander
-    - keeper-password-manager
-    - openfortigui
     - openfortivpn
-    - networkmanager-fortisslvpn
     - networkmanager-openvpn
     - networkmanager-vpnc
 
@@ -197,14 +191,9 @@ aur_packages:
     - walker-bin
     - zen-browser-bin
     - brave-bin
-    - ghostty
-    - hyprland-qtutils
-    - hyprpolkitagent
-    - hyprshot
-    - kanshi
-    - wl-clip-persist
-    - wlr-randr
-    - nwg-displays
+    - clipse
+    - blueberry-wayland
+    - hyprland-guiutils-git
     - catppuccin-sddm-theme-mocha
   dev:
     - hadolint-bin
@@ -215,4 +204,13 @@ aur_packages:
     - sesh-bin
     - tfenv
     - aws-session-manager-plugin
-  extras: []
+    - terraform-docs
+    - pyenv-virtualenv
+    - claude-code
+  extras:
+    - spotify
+    - slack-desktop-wayland
+    - keeper-commander
+    - keeper-password-manager
+    - openfortigui-git
+    - networkmanager-fortisslvpn

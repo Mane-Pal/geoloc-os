@@ -187,6 +187,12 @@
     - "'base systemd' not in hooks_line.stdout"
 
 # XDG Mime Type Configuration
+- name: Ensure applications directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.local/share/applications"
+    state: directory
+    mode: "0755"
+
 - name: Update desktop database
   shell: update-desktop-database ~/.local/share/applications
   become: false
