@@ -186,6 +186,82 @@
     - "'base udev' not in hooks_line.stdout"
     - "'base systemd' not in hooks_line.stdout"
 
+# NVIDIA Wayland/Hyprland integration
+- name: Deploy NVIDIA DRM modprobe config
+  become: true
+  copy:
+    src: nvidia-drm.conf
+    dest: /etc/modprobe.d/nvidia-drm.conf
+    mode: "0644"
+    backup: yes
+  notify: rebuild initramfs
+  when: gpu_vendor | default('') == 'nvidia'
+
+- name: Ensure pacman hooks directory exists
+  become: true
+  file:
+    path: /etc/pacman.d/hooks
+    state: directory
+    mode: "0755"
+  when: gpu_vendor | default('') == 'nvidia'
+
+- name: Deploy NVIDIA pacman hook for initramfs rebuild
+  become: true
+  copy:
+    src: nvidia.hook
+    dest: /etc/pacman.d/hooks/nvidia.hook
+    mode: "0644"
+  when: gpu_vendor | default('') == 'nvidia'
+
+- name: Check if nvidia modules are in mkinitcpio MODULES
+  become: true
+  shell: grep "^MODULES=" /etc/mkinitcpio.conf | grep -q nvidia
+  register: nvidia_modules_check
+  failed_when: false
+  changed_when: false
+  when: gpu_vendor | default('') == 'nvidia'
+
+- name: Add NVIDIA modules to mkinitcpio for early KMS
+  become: true
+  replace:
+    path: /etc/mkinitcpio.conf
+    regexp: '^MODULES=\(([^)]*)\)'
+    replace: 'MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)'
+    backup: yes
+  notify: rebuild initramfs
+  when:
+    - gpu_vendor | default('') == 'nvidia'
+    - nvidia_modules_check.rc != 0
+
+# Fingerprint reader support
+- name: Check for fingerprint reader hardware
+  shell: lsusb | grep -qi "fingerprint\|goodix\|elan.*fingerprint\|synaptics.*fingerprint"
+  register: fingerprint_check
+  failed_when: false
+  changed_when: false
+
+- name: Enable fprintd service
+  become: true
+  systemd:
+    name: fprintd
+    enabled: yes
+  when: fingerprint_check.rc == 0
+
+# Hardware sensor monitoring
+- name: Run sensors-detect to configure sensor modules
+  become: true
+  command: sensors-detect --auto
+  register: sensors_detect
+  changed_when: "'no sensors were detected' not in sensors_detect.stdout"
+  failed_when: false
+
+- name: Enable lm_sensors service
+  become: true
+  systemd:
+    name: lm_sensors
+    enabled: yes
+    state: started
+
 # Hyprland monitor configuration
 - name: Create Hyprland config directory
   file:

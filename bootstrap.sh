@@ -36,6 +36,9 @@ on_error() {
 }
 trap on_error ERR
 
+# Set by wizard, used by main() to determine which roles to install
+SELECTED_TAGS=""
+
 ensure_gum() {
   if ! command -v gum &>/dev/null; then
     log "Installing gum (interactive prompts)..."
@@ -86,6 +89,33 @@ run_setup_wizard() {
     "Quick setup (recommended defaults)" \
     "Customize settings")
 
+  # --- Role selection ---
+  local role_desktop="Desktop environment  —  Hyprland, GUI apps, fonts, media, audio"
+  local role_dev="Development tools    —  Docker, K8s, Python, cloud CLI, editors"
+  local role_hardening="System hardening     —  Firewall, security policies"
+  local role_dotfiles="Dotfiles             —  Clone and stow your dotfiles repo"
+  local role_extras="Extras               —  Work apps, VPN, ClamAV, LibreOffice"
+
+  gum style --foreground 245 "Base system (shell, tools, system maintenance) is always included."
+
+  local selected_roles
+  selected_roles=$(gum choose --no-limit \
+    --header "Select components to install:" \
+    --selected "$role_desktop,$role_dev,$role_hardening,$role_dotfiles" \
+    "$role_desktop" \
+    "$role_dev" \
+    "$role_hardening" \
+    "$role_dotfiles" \
+    "$role_extras")
+
+  # Map selections to Ansible tags
+  SELECTED_TAGS="base"
+  echo "$selected_roles" | grep -q "Desktop"    && SELECTED_TAGS+=",desktop"
+  echo "$selected_roles" | grep -q "Development" && SELECTED_TAGS+=",development"
+  echo "$selected_roles" | grep -q "hardening"   && SELECTED_TAGS+=",system-hardening"
+  echo "$selected_roles" | grep -q "Dotfiles"    && SELECTED_TAGS+=",dotfiles"
+  echo "$selected_roles" | grep -q "Extras"      && SELECTED_TAGS+=",extras"
+
   # --- Defaults ---
   local git_name=""
   local git_email=""
@@ -122,6 +152,7 @@ run_setup_wizard() {
 
   # --- Summary ---
   local summary="Configuration summary:\n"
+  summary+="  Components:     ${SELECTED_TAGS//,/, }\n"
   summary+="  Git name:       $git_name\n"
   summary+="  Git email:      $git_email\n"
   summary+="  Timezone:       $tz\n"
@@ -280,15 +311,23 @@ Usage: $0 [OPTIONS]
 
 Setup Geoloc OS - Simplified Arch Linux configuration
 
+The interactive wizard lets you select which components to install:
+  Base system      (always included) Shell, tools, system maintenance
+  Desktop          Hyprland, GUI apps, fonts, media, audio
+  Development      Docker, K8s, Python, cloud CLI, editors
+  System hardening Firewall, security policies
+  Dotfiles         Clone and stow your dotfiles repo
+  Extras           Work apps, VPN, ClamAV, LibreOffice
+
 OPTIONS:
-  --full, -f      Include extras (work apps, ClamAV, VPN, etc.)
+  --full, -f      Install all components (skip role selection)
   --check, -c     Run validation checks only (dry-run mode)
   --no-wizard     Skip the interactive setup wizard (use defaults)
   --help, -h      Show this help message
 
 EXAMPLES:
-  $0              Install base + desktop + dev + hardening + dotfiles
-  $0 --full       Install everything including extras
+  $0              Interactive setup — choose components to install
+  $0 --full       Install everything (no component selection)
   $0 --check      Validate configuration without installing
 
 After bootstrap, use 'just' to run individual components:
@@ -297,6 +336,7 @@ After bootstrap, use 'just' to run individual components:
   just dev        Install development tools only
   just extras     Install optional packages only
   just hardening  Apply security hardening only
+  just dotfiles   Deploy dotfiles only
 
 EOF
 }
@@ -310,7 +350,7 @@ main() {
       return
       ;;
     --full|-f)
-      log "Starting Geoloc OS setup (full - including extras)..."
+      log "Starting Geoloc OS setup (full - all components)..."
       log "Log file: $LOG_FILE"
       check_system
       check_user_config
@@ -332,14 +372,20 @@ main() {
       show_help
       ;;
     "")
-      log "Starting Geoloc OS setup (skipping extras)..."
+      log "Starting Geoloc OS setup..."
       log "Log file: $LOG_FILE"
       check_system
       check_user_config
       install_prerequisites
-      run_playbook --skip-tags extras
+      if [[ -n "$SELECTED_TAGS" ]]; then
+        log "Installing components: ${SELECTED_TAGS//,/, }"
+        run_playbook --tags "$SELECTED_TAGS"
+      else
+        # No wizard ran (user.yml already existed) — install all except extras
+        run_playbook --skip-tags extras
+      fi
       log "Setup complete! You may want to reboot to ensure all services are running properly."
-      log "Run 'just extras' later to install work apps, ClamAV, VPN, etc."
+      log "Use 'just' to run individual components later (just desktop, just dev, etc.)"
       log "Full log: $LOG_FILE"
       ;;
     *)

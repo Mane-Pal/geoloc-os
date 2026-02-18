@@ -96,6 +96,12 @@ packages:
     - mpv
     - evince
     - mediainfo
+    # Hardware support
+    - vulkan-tools
+    - vulkan-icd-loader
+    - libva-utils
+    - fprintd
+    - lm_sensors
     # System utilities
     - plocate
     - python-pyxdg
