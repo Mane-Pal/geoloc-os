@@ -66,6 +66,13 @@
     dest: /etc/clamav/virus-event.sh
     mode: '0755'
 
+- name: Stop freshclam service before manual database update
+  become: true
+  systemd:
+    name: clamav-freshclam.service
+    state: stopped
+  failed_when: false
+
 - name: Update ClamAV virus database
   become: true
   command: freshclam
@@ -74,6 +81,7 @@
     - freshclam_result.rc != 0
     - "'database is up to date' not in freshclam_result.stderr"
     - "'locked by another process' not in freshclam_result.stderr"
+    - "'Failed to lock' not in freshclam_result.stdout"
   changed_when: "'Database updated' in freshclam_result.stdout"
 
 - name: Enable and start ClamAV services

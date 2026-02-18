@@ -33,6 +33,11 @@ dotfiles *args='': (ansible "--tags" "dotfiles" args)
 check:
     @just ansible --check
 
+# Quick syntax validation (no sudo, no Docker)
+validate:
+    ansible-playbook site.yml --syntax-check
+    @echo "Syntax OK"
+
 # Show what packages would be installed
 packages:
     @echo "=== Base packages ==="

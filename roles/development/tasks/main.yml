@@ -41,8 +41,8 @@
   become: true
   lineinfile:
     path: /etc/subuid
-    regexp: "^{{ ansible_env.USER }}:"
-    line: "{{ ansible_env.USER }}:100000:65536"
+    regexp: "^{{ ansible_facts.env.USER }}:"
+    line: "{{ ansible_facts.env.USER }}:100000:65536"
     create: yes
     mode: '0644'
   when: "'docker' in packages.dev"
@@ -51,15 +51,15 @@
   become: true
   lineinfile:
     path: /etc/subgid
-    regexp: "^{{ ansible_env.USER }}:"
-    line: "{{ ansible_env.USER }}:100000:65536"
+    regexp: "^{{ ansible_facts.env.USER }}:"
+    line: "{{ ansible_facts.env.USER }}:100000:65536"
     create: yes
     mode: '0644'
   when: "'docker' in packages.dev"
 
 - name: Enable user lingering for rootless Docker at boot
   become: true
-  command: loginctl enable-linger {{ ansible_env.USER }}
+  command: loginctl enable-linger {{ ansible_facts.env.USER }}
   changed_when: false
   when: "'docker' in packages.dev"
 
@@ -83,7 +83,7 @@
 
 - name: Create user Docker config directory
   file:
-    path: "{{ ansible_env.HOME }}/.config/docker"
+    path: "{{ ansible_facts.env.HOME }}/.config/docker"
     state: directory
     mode: '0755'
   when: "'docker' in packages.dev"
@@ -91,11 +91,31 @@
 - name: Configure rootless Docker daemon
   copy:
     src: docker-rootless-daemon.json
-    dest: "{{ ansible_env.HOME }}/.config/docker/daemon.json"
+    dest: "{{ ansible_facts.env.HOME }}/.config/docker/daemon.json"
     mode: '0644'
     backup: yes
   when: "'docker' in packages.dev"
   notify: restart rootless docker
+
+- name: Ensure iptables kernel modules load at boot (required by rootless Docker)
+  become: true
+  copy:
+    content: |
+      ip_tables
+      ip6_tables
+    dest: /etc/modules-load.d/docker-rootless.conf
+    mode: '0644'
+  when: "'docker' in packages.dev"
+
+- name: Load iptables kernel modules now
+  become: true
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - ip_tables
+    - ip6_tables
+  when: "'docker' in packages.dev"
 
 - name: Enable rootless Docker user service
   systemd:

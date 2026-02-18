@@ -1,0 +1,72 @@
+---
+# User-specific configuration overrides
+# Copy this file to user.yml and uncomment/edit the values you need.
+# Variables set here override defaults in packages.yml and dotfiles.yml.
+# Hardware variables (cpu_ucode, gpu_packages) are auto-detected if not set.
+
+# --- Hardware ---
+# CPU microcode package (auto-detected if not set)
+# cpu_ucode: amd-ucode        # AMD
+# cpu_ucode: intel-ucode       # Intel
+
+# GPU driver packages (auto-detected if not set)
+# gpu_packages:                # AMD
+#   - mesa
+#   - vulkan-radeon
+#   - lib32-mesa
+#   - lib32-vulkan-radeon
+# gpu_packages:                # Intel
+#   - mesa
+#   - vulkan-intel
+#   - lib32-mesa
+#   - lib32-vulkan-intel
+# gpu_packages:                # NVIDIA (proprietary)
+#   - nvidia
+#   - nvidia-utils
+#   - lib32-nvidia-utils
+
+# --- Regional ---
+# Extra locale to generate alongside en_US.UTF-8 (leave unset to skip)
+# extra_locale: da_DK.UTF-8
+
+# LC_TIME locale for date/time formatting (leave unset to skip)
+# lc_time: da_DK.UTF-8
+
+# Timezone (default: Europe/Copenhagen)
+# timezone: Europe/Copenhagen
+
+# Reflector mirror countries (default: Denmark,Germany,Netherlands,Sweden)
+# mirror_countries: "Denmark,Germany,Netherlands,Sweden"
+
+# --- Desktop ---
+# Default browser .desktop file for XDG mime (default: zen.desktop)
+# default_browser_desktop: zen.desktop
+
+# SDDM session (default: hyprland)
+# sddm_session: hyprland
+
+# SDDM theme (default: catppuccin-mocha)
+# sddm_theme: catppuccin-mocha
+
+# --- Dotfiles ---
+# dotfiles_repo: "https://github.com/Mane-Pal/dotfiles.git"
+# dotfiles_dest: "{{ home_dir }}/git/mane-pal/dotfiles"
+# dotfiles_branch: "master"
+# dotfiles_packages:
+#   - btop
+#   - fastfetch
+#   - fontconfig
+#   - git
+#   - gtk
+#   - ghostty
+#   - hypr
+#   - lazygit
+#   - mako
+#   - nvim
+#   - opencode
+#   - scripts
+#   - starship
+#   - tmux
+#   - waybar
+#   - wofi
+#   - zsh

@@ -5,7 +5,6 @@ packages:
   # Essential system packages
   base:
     - base-devel
-    - amd-ucode
     - fwupd
     - git
     - zsh
@@ -115,11 +114,7 @@ packages:
     - wl-clip-persist
     - wlr-randr
     - nwg-displays
-    # AMD GPU drivers
-    - mesa
-    - vulkan-radeon
-    - lib32-mesa
-    - lib32-vulkan-radeon
+    - hyprland-guiutils
 
   # Development tools
   dev:
@@ -193,7 +188,6 @@ aur_packages:
     - brave-bin
     - clipse
     - blueberry-wayland
-    - hyprland-guiutils-git
     - catppuccin-sddm-theme-mocha
   dev:
     - hadolint-bin

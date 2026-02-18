@@ -16,17 +16,47 @@
   git:
     repo: "{{ dotfiles_repo }}"
     dest: "{{ dotfiles_dest }}"
-    version: "{{ dotfiles_branch | default('main') }}"
+    version: "{{ dotfiles_branch | default('master') }}"
     accept_hostkey: yes
   when: not dotfiles_dir.stat.exists
+
+- name: Check for local modifications in dotfiles
+  command: git status --porcelain
+  args:
+    chdir: "{{ dotfiles_dest }}"
+  register: dotfiles_local_changes
+  changed_when: false
+  when: dotfiles_dir.stat.exists
 
 - name: Update dotfiles repository
   git:
     repo: "{{ dotfiles_repo }}"
     dest: "{{ dotfiles_dest }}"
-    version: "{{ dotfiles_branch | default('main') }}"
+    version: "{{ dotfiles_branch | default('master') }}"
     update: yes
-  when: dotfiles_dir.stat.exists
+  when:
+    - dotfiles_dir.stat.exists
+    - dotfiles_local_changes.stdout == ""
+
+- name: Warn about local dotfiles modifications
+  debug:
+    msg: "Skipping dotfiles update — local modifications detected. Commit or stash changes to enable updates."
+  when:
+    - dotfiles_dir.stat.exists
+    - dotfiles_local_changes.stdout != ""
+
+- name: Check if stow backup already exists
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.config.pre-stow.tar.gz"
+  register: stow_backup
+
+- name: Backup .config before first stow deployment
+  archive:
+    path: "{{ ansible_facts.env.HOME }}/.config"
+    dest: "{{ ansible_facts.env.HOME }}/.config.pre-stow.tar.gz"
+    format: gz
+  when: not stow_backup.stat.exists
+  failed_when: false
 
 - name: Stow dotfiles packages
   command: stow -v -R {{ item }}

@@ -5,7 +5,7 @@
 - name: Install desktop packages
   become: true
   pacman:
-    name: "{{ packages.desktop }}"
+    name: "{{ packages.desktop + (gpu_packages if gpu_packages is defined else []) }}"
     state: present
 
 - name: Install pipewire-jack (replaces jack2)
@@ -62,7 +62,7 @@
 
 - name: Create systemd user directory
   file:
-    path: "{{ ansible_env.HOME }}/.config/systemd/user"
+    path: "{{ ansible_facts.env.HOME }}/.config/systemd/user"
     state: directory
     mode: "0755"
 
@@ -83,8 +83,8 @@
 - name: Configure SDDM display manager
   become: true
   template:
-    src: sddm-autologin.conf.j2
-    dest: /etc/sddm.conf.d/autologin.conf
+    src: sddm.conf.j2
+    dest: /etc/sddm.conf.d/sddm.conf
     mode: "0644"
     backup: yes
 
@@ -143,7 +143,7 @@
   become: true
   copy:
     src: /etc/mkinitcpio.conf
-    dest: "/etc/mkinitcpio.conf.bak.{{ ansible_date_time.epoch }}"
+    dest: "/etc/mkinitcpio.conf.bak.{{ ansible_facts.date_time.epoch }}"
     remote_src: yes
     mode: '0644'
   when: plymouth_check.rc != 0
@@ -186,10 +186,36 @@
     - "'base udev' not in hooks_line.stdout"
     - "'base systemd' not in hooks_line.stdout"
 
+# Hyprland monitor configuration
+- name: Create Hyprland config directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/.config/hypr"
+    state: directory
+    mode: "0755"
+
+- name: Check if monitors.conf exists
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.config/hypr/monitors.conf"
+  register: monitors_conf
+
+- name: Create default monitors.conf (all monitors at preferred resolution)
+  copy:
+    content: |
+      # Auto-generated default: all monitors at preferred resolution
+      # Customize per-machine. Examples:
+      #   monitor=eDP-1,preferred,auto,1           # laptop built-in
+      #   monitor=DP-1,2560x1440@144,0x0,1         # external at 144Hz
+      #   monitor=DP-2,1920x1080,2560x0,1           # second external, right of first
+      # Docs: https://wiki.hyprland.org/Configuring/Monitors/
+      monitor=,preferred,auto,1
+    dest: "{{ ansible_facts.env.HOME }}/.config/hypr/monitors.conf"
+    mode: "0644"
+  when: not monitors_conf.stat.exists
+
 # XDG Mime Type Configuration
 - name: Ensure applications directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.local/share/applications"
+    path: "{{ ansible_facts.env.HOME }}/.local/share/applications"
     state: directory
     mode: "0755"
 
@@ -215,10 +241,10 @@
   become: false
   changed_when: false
 
-- name: Set default web browser (zen-browser)
+- name: Set default web browser
   shell: |
-    xdg-mime default zen.desktop x-scheme-handler/http
-    xdg-mime default zen.desktop x-scheme-handler/https
+    xdg-mime default {{ default_browser_desktop | default('zen.desktop') }} x-scheme-handler/http
+    xdg-mime default {{ default_browser_desktop | default('zen.desktop') }} x-scheme-handler/https
   become: false
   changed_when: false
 

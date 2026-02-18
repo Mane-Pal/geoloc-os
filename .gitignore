@@ -5,6 +5,7 @@
 
 # Log files
 *.log
+logs/
 
 # Ansible retry files
 *.retry
@@ -24,3 +25,6 @@
 __pycache__/
 *.pyc
 *.pyo
+
+# User-specific config (create from user.yml.example)
+group_vars/all/user.yml

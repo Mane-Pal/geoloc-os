@@ -1,0 +1,5 @@
+--save /etc/pacman.d/mirrorlist
+--protocol https
+--country {{ mirror_countries | default('Denmark,Germany,Netherlands,Sweden') }}
+--latest 10
+--sort rate
