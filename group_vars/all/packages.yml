@@ -40,7 +40,6 @@ packages:
     - pipewire
     - pipewire-pulse
     - pipewire-alsa
-    # pipewire-jack installed via shell task (handles jack2 conflict)
     - wireplumber
     - networkmanager
     - bluez

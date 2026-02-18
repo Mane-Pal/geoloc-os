@@ -114,6 +114,56 @@ Then on the old machine, clean up: Ctrl+C the server, `sudo ufw delete allow 808
 - [ ] `paru -Ss ghostty` verifies AUR works
 - [ ] `docker run hello-world` verifies Docker + DNS
 
+### Phase 10: LUKS + TPM2 auto-unlock (optional)
+
+Skip the LUKS password prompt at boot by binding the disk encryption to your TPM2 chip. You'll only enter your password once at the SDDM login screen.
+
+**Prerequisites:** systemd-boot, LUKS2 partition, TPM2 chip.
+
+```bash
+# Verify TPM2 is available
+systemd-cryptenroll --tpm2-device=list
+```
+
+**1. Switch to systemd-based initramfs hooks** (required for TPM2 support):
+
+```bash
+# In /etc/mkinitcpio.conf, replace these hooks:
+#   udev             → systemd
+#   keymap consolefont → sd-vconsole
+#   encrypt          → sd-encrypt
+sudo sed -i 's/HOOKS=(base udev plymouth autodetect microcode modconf kms keyboard keymap consolefont block encrypt filesystems fsck)/HOOKS=(base systemd plymouth autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)/' /etc/mkinitcpio.conf
+```
+
+**2. Create `/etc/crypttab.initramfs`** (tells sd-encrypt how to unlock):
+
+```bash
+# Replace UUID with your LUKS partition UUID (blkid /dev/<partition>)
+echo 'root    UUID=<your-luks-uuid>    -    tpm2-device=auto' | sudo tee /etc/crypttab.initramfs
+```
+
+**3. Update bootloader entry** (remove legacy `cryptdevice=` param):
+
+```bash
+# sd-encrypt reads from crypttab.initramfs, so cryptdevice= is no longer needed
+# Edit /boot/loader/entries/<your-entry>.conf and remove cryptdevice=PARTUUID=...:root from the options line
+```
+
+**4. Enroll TPM2 key** (prompts for LUKS password):
+
+```bash
+sudo systemd-cryptenroll --tpm2-device=auto /dev/<your-luks-partition>
+```
+
+**5. Rebuild initramfs and reboot:**
+
+```bash
+sudo mkinitcpio -P
+sudo reboot
+```
+
+The disk should unlock automatically via TPM2. Your password keyslot is kept as a fallback — if TPM2 fails (BIOS update, hardware change), you'll be prompted for the password instead.
+
 ### If something fails
 
 ```bash

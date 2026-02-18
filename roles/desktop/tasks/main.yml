@@ -8,16 +8,6 @@
     name: "{{ packages.desktop + (gpu_packages if gpu_packages is defined else []) }}"
     state: present
 
-- name: Install pipewire-jack (replaces jack2)
-  become: true
-  shell: yes | pacman -S pipewire-jack --noconfirm
-  args:
-    creates: /usr/lib/pipewire-0.3/jack/libjack.so
-  register: pipewire_jack_result
-  failed_when:
-    - pipewire_jack_result.rc != 0
-    - "'is up to date' not in pipewire_jack_result.stdout"
-    - "'there is nothing to do' not in pipewire_jack_result.stdout"
 
 - name: Enable NetworkManager
   become: true
@@ -45,6 +35,7 @@
     name: power-profiles-daemon
     enabled: no
     masked: yes
+  failed_when: false
 
 - name: Enable TLP power management
   become: true

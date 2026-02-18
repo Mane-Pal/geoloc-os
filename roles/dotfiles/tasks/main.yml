@@ -59,7 +59,7 @@
   failed_when: false
 
 - name: Stow dotfiles packages
-  command: stow -v -R {{ item }}
+  command: stow -v --adopt -R {{ item }}
   args:
     chdir: "{{ dotfiles_dest }}"
   loop: "{{ dotfiles_packages }}"
