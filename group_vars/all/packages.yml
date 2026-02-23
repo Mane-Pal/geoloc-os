@@ -28,6 +28,7 @@ packages:
     - stow
     - uv
     - yazi
+    - thunar
     # System maintenance
     - reflector
     - pkgfile
@@ -136,6 +137,7 @@ packages:
     # Containers (rootless Docker)
     - docker
     - docker-buildx
+    - docker-compose
     - fuse-overlayfs
     - slirp4netns
     - podman
